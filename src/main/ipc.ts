@@ -1,10 +1,11 @@
-import { BrowserWindow, ipcMain } from 'electron'
+import { app, BrowserWindow, ipcMain } from 'electron'
 import { IPC } from '../shared/ipc'
 import { AppSettings, Profile } from '../shared/types'
 import { db, newOtygrovka } from './store'
 import { engine } from './engine'
 import { catalog } from './catalog'
 import { hotkeys } from './hotkeys'
+import { checkForUpdates, getUpdateStatus, installUpdate } from './updater'
 
 /** Регистрирует все IPC-обработчики. Вызывается один раз при старте. */
 export function registerIpc(): void {
@@ -55,6 +56,12 @@ export function registerIpc(): void {
 
   // Вспомогательный фабричный метод для UI: создать пустую отыгровку.
   ipcMain.handle('otygrovka:new', () => newOtygrovka())
+
+  // ---- Обновления / версия ----
+  ipcMain.handle(IPC.AppVersion, () => app.getVersion())
+  ipcMain.handle(IPC.UpdateCheck, () => checkForUpdates())
+  ipcMain.handle(IPC.UpdateInstall, () => installUpdate())
+  ipcMain.handle('update:status', () => getUpdateStatus())
 
   // ---- Управление окном ----
   ipcMain.handle(IPC.WindowMinimize, (e) => BrowserWindow.fromWebContents(e.sender)?.minimize())

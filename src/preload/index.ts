@@ -1,6 +1,13 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { IPC } from '../shared/ipc'
-import { AppSettings, CatalogItem, EngineState, Otygrovka, Profile } from '../shared/types'
+import {
+  AppSettings,
+  CatalogItem,
+  EngineState,
+  Otygrovka,
+  Profile,
+  UpdateStatus
+} from '../shared/types'
 
 const api = {
   // Профили
@@ -40,6 +47,17 @@ const api = {
   windowMinimize: (): Promise<void> => ipcRenderer.invoke(IPC.WindowMinimize),
   windowMaximize: (): Promise<void> => ipcRenderer.invoke(IPC.WindowMaximize),
   windowClose: (): Promise<void> => ipcRenderer.invoke(IPC.WindowClose),
+
+  // Обновления / версия
+  appVersion: (): Promise<string> => ipcRenderer.invoke(IPC.AppVersion),
+  updateCheck: (): Promise<UpdateStatus> => ipcRenderer.invoke(IPC.UpdateCheck),
+  updateStatus: (): Promise<UpdateStatus> => ipcRenderer.invoke('update:status'),
+  updateInstall: (): Promise<void> => ipcRenderer.invoke(IPC.UpdateInstall),
+  onUpdate: (cb: (s: UpdateStatus) => void): (() => void) => {
+    const h = (_e: unknown, s: UpdateStatus): void => cb(s)
+    ipcRenderer.on(IPC.EvtUpdate, h)
+    return () => ipcRenderer.removeListener(IPC.EvtUpdate, h)
+  },
 
   // Подписки на события main -> renderer
   onEngineState: (cb: (s: EngineState) => void): (() => void) => {

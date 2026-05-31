@@ -31,10 +31,16 @@ export const IPC = {
   WindowMaximize: 'window:maximize',
   WindowClose: 'window:close',
 
+  // Обновления / версия
+  AppVersion: 'app:version',
+  UpdateCheck: 'update:check',
+  UpdateInstall: 'update:install',
+
   // События main -> renderer
   EvtEngineState: 'evt:engine-state',
   EvtHotkeyCaptured: 'evt:hotkey-captured',
-  EvtPlaybackLog: 'evt:playback-log'
+  EvtPlaybackLog: 'evt:playback-log',
+  EvtUpdate: 'evt:update'
 } as const
 
 export type IpcChannel = (typeof IPC)[keyof typeof IPC]

@@ -1,0 +1,129 @@
+{
+  "items": [
+    {
+      "id": "medic-ems",
+      "name": "Медик / EMS",
+      "author": "RPBINDER",
+      "description": "Осмотр пострадавшего, реанимация и перевязка ран.",
+      "link": "https://rpbinder.com/i/MEDIC001",
+      "views": 1240,
+      "otygrovkiCount": 3,
+      "tags": ["медицина", "EMS", "госслужба"],
+      "data": {
+        "chatKey": "T",
+        "pasteDelayMs": 120,
+        "otygrovki": [
+          {
+            "id": "osmotr",
+            "name": "Осмотр",
+            "hotkey": "",
+            "disableAutoSend": false,
+            "recordVideo": false,
+            "messages": [
+              { "id": "1", "text": "/me осматривает пострадавшего на наличие травм", "delayMs": 800 },
+              { "id": "2", "text": "/do Видимых повреждений не обнаружено.", "delayMs": 1500 }
+            ]
+          },
+          {
+            "id": "reanim",
+            "name": "Реанимация",
+            "hotkey": "",
+            "disableAutoSend": false,
+            "recordVideo": false,
+            "messages": [
+              { "id": "1", "text": "/me достаёт дефибриллятор и подключает электроды", "delayMs": 800 },
+              { "id": "2", "text": "/me производит разряд", "delayMs": 1200 },
+              { "id": "3", "text": "/do Сердцебиение восстановлено.", "delayMs": 1500 }
+            ]
+          },
+          {
+            "id": "perevyazka",
+            "name": "Перевязка",
+            "hotkey": "",
+            "disableAutoSend": false,
+            "recordVideo": false,
+            "messages": [
+              { "id": "1", "text": "/me обрабатывает рану антисептиком и накладывает повязку", "delayMs": 1000 }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "police-lspd",
+      "name": "Полиция / LSPD",
+      "author": "RPBINDER",
+      "description": "Задержание, обыск и зачитывание прав.",
+      "link": "https://rpbinder.com/i/POLICE01",
+      "views": 3580,
+      "otygrovkiCount": 2,
+      "tags": ["полиция", "госслужба"],
+      "data": {
+        "chatKey": "T",
+        "pasteDelayMs": 100,
+        "otygrovki": [
+          {
+            "id": "zaderzhanie",
+            "name": "Задержание",
+            "hotkey": "",
+            "disableAutoSend": false,
+            "recordVideo": false,
+            "messages": [
+              { "id": "1", "text": "/me достаёт наручники и фиксирует руки задержанного", "delayMs": 900 },
+              { "id": "2", "text": "/do Наручники надёжно зафиксированы.", "delayMs": 1300 }
+            ]
+          },
+          {
+            "id": "prava",
+            "name": "Зачитать права",
+            "hotkey": "",
+            "disableAutoSend": false,
+            "recordVideo": false,
+            "messages": [
+              { "id": "1", "text": "Вы имеете право хранить молчание.", "delayMs": 1000 },
+              { "id": "2", "text": "Всё сказанное может быть использовано против вас в суде.", "delayMs": 1800 }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "mechanic-sto",
+      "name": "Механик / СТО",
+      "author": "RPBINDER",
+      "description": "Диагностика и ремонт автомобиля.",
+      "link": "https://rpbinder.com/i/MECH0001",
+      "views": 890,
+      "otygrovkiCount": 2,
+      "tags": ["работа", "авто"],
+      "data": {
+        "chatKey": "T",
+        "pasteDelayMs": 100,
+        "otygrovki": [
+          {
+            "id": "diag",
+            "name": "Диагностика",
+            "hotkey": "",
+            "disableAutoSend": false,
+            "recordVideo": false,
+            "messages": [
+              { "id": "1", "text": "/me подключает сканер к диагностическому разъёму", "delayMs": 900 },
+              { "id": "2", "text": "/do На экране отображаются коды ошибок двигателя.", "delayMs": 1600 }
+            ]
+          },
+          {
+            "id": "remont",
+            "name": "Ремонт двигателя",
+            "hotkey": "",
+            "disableAutoSend": false,
+            "recordVideo": false,
+            "messages": [
+              { "id": "1", "text": "/me откручивает крепления и снимает неисправный узел", "delayMs": 1000 },
+              { "id": "2", "text": "/me устанавливает новую деталь и затягивает болты", "delayMs": 1500 }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

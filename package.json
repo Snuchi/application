@@ -11,6 +11,7 @@
     "start": "electron-vite preview",
     "build": "electron-vite build",
     "build:win": "electron-vite build && electron-builder --win",
+    "release": "electron-vite build && electron-builder --win --publish always",
     "build:unpack": "electron-vite build && electron-builder --dir",
     "typecheck:node": "tsc --noEmit -p tsconfig.node.json --composite false",
     "typecheck:web": "tsc --noEmit -p tsconfig.web.json --composite false",
@@ -20,6 +21,7 @@
   },
   "dependencies": {
     "electron-store": "^8.2.0",
+    "electron-updater": "^6.3.9",
     "nanoid": "^3.3.7"
   },
   "optionalDependencies": {

@@ -2,8 +2,19 @@ import { useStore } from '../store'
 import { Breadcrumbs } from '../components/Chrome'
 import { Toggle } from '../components/Toggle'
 
+const UPDATE_LABEL: Record<string, string> = {
+  idle: '',
+  checking: 'Проверяем обновления…',
+  available: 'Найдено обновление, загружается…',
+  'not-available': 'У вас актуальная версия',
+  downloading: 'Загрузка обновления…',
+  downloaded: 'Обновление готово — перезапустите приложение',
+  error: 'Ошибка проверки обновлений',
+  disabled: 'Доступно только в установленной версии'
+}
+
 export function SettingsPage(): JSX.Element {
-  const { settings, updateSettings } = useStore()
+  const { settings, updateSettings, appVersion, update, checkUpdate } = useStore()
 
   if (!settings) {
     return (
@@ -70,8 +81,32 @@ export function SettingsPage(): JSX.Element {
           <Toggle on={settings.minimizeToTray} onChange={(v) => updateSettings({ minimizeToTray: v })} />
         </div>
 
+        <div className="divider" />
+
+        <div className="toggle-row" style={{ borderTop: 'none' }}>
+          <div className="text">
+            <div className="t">Обновления</div>
+            <div className="d">
+              Версия {appVersion || '—'}
+              {update.state !== 'idle' && UPDATE_LABEL[update.state]
+                ? ` · ${UPDATE_LABEL[update.state]}`
+                : ''}
+              {update.state === 'downloading' && update.percent != null
+                ? ` ${update.percent}%`
+                : ''}
+            </div>
+          </div>
+          <button
+            className="btn sm"
+            disabled={update.state === 'checking' || update.state === 'downloading'}
+            onClick={checkUpdate}
+          >
+            Проверить обновления
+          </button>
+        </div>
+
         <div className="empty" style={{ paddingTop: 24 }}>
-          RPBINDER v0.1.0
+          RPBINDER v{appVersion || '0.1.0'}
         </div>
       </div>
     </>

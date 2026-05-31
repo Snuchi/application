@@ -1,7 +1,8 @@
 name: Build Windows
 
-# Собирает Windows-установщик (NSIS) и portable-zip на windows-runner.
-# Готовые файлы доступны во вкладке Actions → нужный запуск → Artifacts.
+# Собирает Windows-установщик (NSIS) и portable-zip на windows-runner и
+# публикует их в GitHub Release (страница Releases репозитория). Это же
+# включает авто-обновление приложения через electron-updater.
 
 on:
   push:
@@ -9,6 +10,9 @@ on:
       - 'claude/**'
       - main
   workflow_dispatch: {}
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -27,13 +31,13 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build Windows app (NSIS + portable zip)
-        run: npm run build:win
+      - name: Build & publish Windows release
+        run: npm run release
         env:
-          # На CI код не подписываем — отключаем попытки подписи.
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
 
-      - name: Upload artifacts
+      - name: Upload build artifacts (резервная копия в Actions)
         uses: actions/upload-artifact@v4
         with:
           name: RPBINDER-windows

@@ -469,6 +469,20 @@ textarea.input {
   padding: 0 12px;
 }
 
+.update-bar {
+  background: var(--accent-2);
+  color: #fff;
+  padding: 10px 24px;
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.update-bar.ready {
+  justify-content: space-between;
+}
+
 .empty {
   text-align: center;
   color: var(--text-mute);

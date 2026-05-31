@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useStore } from './store'
 import { Nav, Rail, TitleBar } from './components/Chrome'
+import { UpdateBanner } from './components/UpdateBanner'
 import { ProfilesPage } from './pages/ProfilesPage'
 import { ProfileEditorPage } from './pages/ProfileEditorPage'
 import { OtygrovkaEditorPage } from './pages/OtygrovkaEditorPage'
@@ -22,6 +23,7 @@ export default function App(): JSX.Element {
         <Rail />
         <Nav />
         <main className="content">
+          <UpdateBanner />
           {nav.view === 'profiles' && <ProfilesPage />}
           {nav.view === 'profile' && <ProfileEditorPage />}
           {nav.view === 'otygrovka' && <OtygrovkaEditorPage />}

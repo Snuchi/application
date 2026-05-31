@@ -67,6 +67,12 @@ export interface CatalogItem {
   views: number
   otygrovkiCount: number
   tags: string[]
+  /** Готовое содержимое профиля, устанавливаемое при «Добавить профиль». */
+  data?: {
+    chatKey: string
+    pasteDelayMs: number
+    otygrovki: Otygrovka[]
+  }
 }
 
 /** Состояние работающего движка отыгровок. */
@@ -75,6 +81,24 @@ export interface EngineState {
   activeProfileId: string | null
   /** Сейчас проигрывается отыгровка (id) или null. */
   playingOtygrovkaId: string | null
+}
+
+/** Статус процесса авто-обновления, транслируется в интерфейс. */
+export interface UpdateStatus {
+  state:
+    | 'idle'
+    | 'checking'
+    | 'available'
+    | 'not-available'
+    | 'downloading'
+    | 'downloaded'
+    | 'error'
+    | 'disabled'
+  /** Версия найденного обновления. */
+  version?: string
+  /** Прогресс загрузки, 0..100. */
+  percent?: number
+  message?: string
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {

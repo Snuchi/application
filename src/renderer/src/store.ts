@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { AppSettings, EngineState, Otygrovka, Profile } from '@shared/types'
+import type { AppSettings, EngineState, Otygrovka, Profile, UpdateStatus } from '@shared/types'
 
 export type View = 'profiles' | 'profile' | 'otygrovka' | 'catalog' | 'help' | 'settings'
 
@@ -27,10 +27,16 @@ interface State {
   engine: EngineState
   logs: LogEntry[]
   saveBox: SaveBox | null
+  appVersion: string
+  update: UpdateStatus
 
   // навигация
   go: (view: View, profileId?: string | null, otygrovkaId?: string | null) => void
   setSaveBox: (box: SaveBox | null) => void
+
+  // обновления
+  checkUpdate: () => Promise<void>
+  installUpdate: () => Promise<void>
 
   // данные
   refreshProfiles: () => Promise<void>
@@ -60,10 +66,15 @@ export const useStore = create<State>((set, get) => ({
   engine: { running: false, activeProfileId: null, playingOtygrovkaId: null },
   logs: [],
   saveBox: null,
+  appVersion: '',
+  update: { state: 'idle' },
 
   go: (view, profileId = null, otygrovkaId = null) =>
     set({ nav: { view, profileId, otygrovkaId }, saveBox: null }),
   setSaveBox: (box) => set({ saveBox: box }),
+
+  checkUpdate: async () => set({ update: await window.api.updateCheck() }),
+  installUpdate: async () => window.api.updateInstall(),
 
   refreshProfiles: async () => set({ profiles: await window.api.listProfiles() }),
   refreshSettings: async () => set({ settings: await window.api.getSettings() }),
@@ -127,11 +138,16 @@ export const useStore = create<State>((set, get) => ({
 
   init: async () => {
     await Promise.all([get().refreshProfiles(), get().refreshSettings()])
-    set({ engine: await window.api.engineState() })
+    set({
+      engine: await window.api.engineState(),
+      appVersion: await window.api.appVersion(),
+      update: await window.api.updateStatus()
+    })
 
     window.api.onEngineState((s) => set({ engine: s }))
     window.api.onPlaybackLog((entry) =>
       set((st) => ({ logs: [...st.logs.slice(-200), entry] }))
     )
+    window.api.onUpdate((u) => set({ update: u }))
   }
 }))

@@ -2,56 +2,60 @@ import { CatalogItem, Profile } from '../shared/types'
 import { db, newOtygrovka, newProfile } from './store'
 
 /**
- * Сервис публичного каталога.
+ * Сервис публичного каталога готовых скриптов.
  *
- * Сейчас реализован локально (демо-данные). Точка подключения к реальному API —
- * метод fetchRemote(): замените тело на запрос к https://api.rpbinder.com/catalog.
+ * Источник — файл catalog.json в репозитории (raw.githubusercontent). Это
+ * позволяет добавлять новые скрипты без пересборки приложения. При недоступности
+ * сети используется встроенный демо-набор.
  */
 
-const DEMO: CatalogItem[] = [
+const CATALOG_URL =
+  'https://raw.githubusercontent.com/Snuchi/application/claude/youthful-cannon-V2yhe/catalog.json'
+
+/** Встроенный резервный набор (если каталог недоступен). */
+const FALLBACK: CatalogItem[] = [
   {
     id: 'demo-medic',
     name: 'Медик / EMS',
     author: 'RPBINDER',
-    description: 'Набор отыгровок для медика: осмотр, реанимация, перевязка.',
+    description: 'Осмотр, реанимация, перевязка.',
     link: 'https://rpbinder.com/i/MEDIC001',
     views: 1240,
-    otygrovkiCount: 8,
-    tags: ['медицина', 'EMS', 'госслужба']
-  },
-  {
-    id: 'demo-police',
-    name: 'Полиция / LSPD',
-    author: 'RPBINDER',
-    description: 'Задержание, обыск, оформление протокола, зачитывание прав.',
-    link: 'https://rpbinder.com/i/POLICE01',
-    views: 3580,
-    otygrovkiCount: 12,
-    tags: ['полиция', 'госслужба']
-  },
-  {
-    id: 'demo-mech',
-    name: 'Механик / СТО',
-    author: 'RPBINDER',
-    description: 'Диагностика, ремонт двигателя, замена колеса, покраска.',
-    link: 'https://rpbinder.com/i/MECH0001',
-    views: 890,
-    otygrovkiCount: 6,
-    tags: ['работа', 'авто']
+    otygrovkiCount: 3,
+    tags: ['медицина', 'EMS'],
+    data: {
+      chatKey: 'T',
+      pasteDelayMs: 120,
+      otygrovki: [
+        {
+          id: 'm-osmotr',
+          name: 'Осмотр',
+          hotkey: '',
+          disableAutoSend: false,
+          recordVideo: false,
+          messages: [
+            { id: '1', text: '/me осматривает пострадавшего на наличие травм', delayMs: 800 },
+            { id: '2', text: '/do Видимых повреждений не обнаружено.', delayMs: 1500 }
+          ]
+        }
+      ]
+    }
   }
 ]
 
-/** Демо-наполнение для устанавливаемого профиля. */
+let cache: CatalogItem[] | null = null
+
+/** Строит профиль из карточки каталога (с готовыми отыгровками, если есть). */
 function buildProfileFromCatalog(item: CatalogItem): Profile {
+  const otygrovki = item.data?.otygrovki?.length
+    ? item.data.otygrovki.map((o) => newOtygrovka(o))
+    : [newOtygrovka({ name: 'Пример отыгровки' })]
   return newProfile({
     name: item.name,
     isPublic: false,
-    otygrovki: [
-      newOtygrovka({
-        name: 'Пример отыгровки',
-        messages: [{ id: 'm1', text: `/me ${item.name}: начинает действие`, delayMs: 1000 }]
-      })
-    ]
+    chatKey: item.data?.chatKey ?? 'T',
+    pasteDelayMs: item.data?.pasteDelayMs ?? 100,
+    otygrovki
   })
 }
 
@@ -76,11 +80,22 @@ export const catalog = {
     return db.createProfile(buildProfileFromCatalog(item))
   },
 
-  /**
-   * Источник данных каталога. Локальная реализация возвращает демо-набор.
-   * TODO: подключить реальный бэкенд (fetch к API), сохранив сигнатуру.
-   */
+  /** Загружает каталог из репозитория; при ошибке возвращает встроенный набор. */
   async fetchRemote(): Promise<CatalogItem[]> {
-    return DEMO
+    if (cache) return cache
+    try {
+      const res = await fetch(CATALOG_URL, { cache: 'no-cache' } as RequestInit)
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const data = (await res.json()) as { items?: CatalogItem[] }
+      const items = Array.isArray(data) ? (data as CatalogItem[]) : data.items
+      if (items?.length) {
+        cache = items
+        return items
+      }
+      throw new Error('пустой каталог')
+    } catch (err) {
+      console.warn('[catalog] не удалось загрузить, использую встроенный набор:', (err as Error).message)
+      return FALLBACK
+    }
   }
 }

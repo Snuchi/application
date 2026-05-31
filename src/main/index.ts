@@ -4,6 +4,7 @@ import { registerIpc } from './ipc'
 import { engine } from './engine'
 import { hotkeys } from './hotkeys'
 import { db } from './store'
+import { initUpdater } from './updater'
 
 let mainWindow: BrowserWindow | null = null
 let tray: Tray | null = null
@@ -89,6 +90,7 @@ if (!gotLock) {
     registerIpc()
     createWindow()
     createTray()
+    initUpdater()
 
     app.on('activate', () => {
       if (BrowserWindow.getAllWindows().length === 0) createWindow()
