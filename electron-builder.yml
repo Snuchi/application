@@ -17,7 +17,7 @@ win:
   target:
     - nsis
     - zip
-  artifactName: ${productName}-${version}-${target}.${ext}
+  artifactName: ${productName}-${version}.${ext}
 nsis:
   oneClick: false
   allowToChangeInstallationDirectory: true
