@@ -16,7 +16,8 @@ asarUnpack:
 win:
   target:
     - nsis
-  artifactName: ${productName}-${version}-setup.${ext}
+    - zip
+  artifactName: ${productName}-${version}-${target}.${ext}
 nsis:
   oneClick: false
   allowToChangeInstallationDirectory: true
