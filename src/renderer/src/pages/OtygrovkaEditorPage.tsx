@@ -4,11 +4,10 @@ import type { Otygrovka, RPMessage } from '@shared/types'
 import { useStore } from '../store'
 import { useT } from '../i18n'
 import { Breadcrumbs } from '../components/Chrome'
-import { Toggle } from '../components/Toggle'
 import { Plus, Trash } from '../components/Icons'
 
-function newMessage(): RPMessage {
-  return { id: nanoid(), text: 'Тестовое сообщение', delayMs: 1000 }
+function newLine(): RPMessage {
+  return { id: nanoid(), text: '', delayMs: 0 }
 }
 
 export function OtygrovkaEditorPage(): JSX.Element {
@@ -62,8 +61,8 @@ export function OtygrovkaEditorPage(): JSX.Element {
   }
 
   const patch = (p: Partial<Otygrovka>): void => setDraft({ ...draft, ...p })
-  const patchMsg = (id: string, p: Partial<RPMessage>): void =>
-    patch({ messages: draft.messages.map((m) => (m.id === id ? { ...m, ...p } : m)) })
+  const patchMsg = (id: string, text: string): void =>
+    patch({ messages: draft.messages.map((m) => (m.id === id ? { ...m, text } : m)) })
 
   const startCapture = async (): Promise<void> => {
     setCapturing(true)
@@ -72,17 +71,6 @@ export function OtygrovkaEditorPage(): JSX.Element {
       setCapturing(false)
       alert(t('otygrovka.captureUnavailable'))
     }
-  }
-
-  const importMessages = (): void => {
-    const raw = prompt(t('otygrovka.importPrompt'))
-    if (!raw) return
-    const imported = raw
-      .split('\n')
-      .map((s) => s.trim())
-      .filter(Boolean)
-      .map((text) => ({ id: nanoid(), text, delayMs: 1000 }))
-    if (imported.length) patch({ messages: [...draft.messages, ...imported] })
   }
 
   return (
@@ -117,62 +105,34 @@ export function OtygrovkaEditorPage(): JSX.Element {
           <div className="msg-card" key={m.id}>
             <div className="head">
               <span className="field-label" style={{ margin: 0 }}>
-                {t('otygrovka.message')} {i + 1}
-              </span>
-              <input
-                className="ms-badge"
-                style={{ width: 70, textAlign: 'right', border: 'none', outline: 'none' }}
-                type="number"
-                min={0}
-                value={m.delayMs}
-                onChange={(e) => patchMsg(m.id, { delayMs: Math.max(0, Number(e.target.value) || 0) })}
-                title="ms"
-              />
-              <span className="muted" style={{ fontSize: 11 }}>
-                ms
+                {t('otygrovka.scriptText')} {draft.messages.length > 1 ? i + 1 : ''}
               </span>
               {draft.messages.length > 1 && (
-                <button className="del" onClick={() => patch({ messages: draft.messages.filter((x) => x.id !== m.id) })}>
+                <button
+                  className="del"
+                  style={{ marginLeft: 'auto' }}
+                  onClick={() => patch({ messages: draft.messages.filter((x) => x.id !== m.id) })}
+                >
                   <Trash size={15} />
                 </button>
               )}
             </div>
-            <textarea className="input" value={m.text} onChange={(e) => patchMsg(m.id, { text: e.target.value })} />
+            <textarea className="input" value={m.text} onChange={(e) => patchMsg(m.id, e.target.value)} />
           </div>
         ))}
 
-        <div className="grid-2">
-          <button className="btn" onClick={() => patch({ messages: [...draft.messages, newMessage()] })}>
-            <span className="row" style={{ justifyContent: 'center', gap: 8 }}>
-              <Plus size={15} /> {t('otygrovka.addMessage')}
-            </span>
-          </button>
-          <button className="btn" onClick={importMessages}>
-            {t('otygrovka.importMessages')}
-          </button>
-        </div>
+        <button className="btn block" onClick={() => patch({ messages: [...draft.messages, newLine()] })}>
+          <span className="row" style={{ justifyContent: 'center', gap: 8 }}>
+            <Plus size={15} /> {t('otygrovka.addLine')}
+          </span>
+        </button>
 
-        <div className="divider" />
-
-        <div className="toggle-row" style={{ borderTop: 'none' }}>
-          <div className="text">
-            <div className="t">{t('otygrovka.disableAuto')}</div>
-            <div className="d">{t('otygrovka.disableAutoDesc')}</div>
-          </div>
-          <Toggle on={draft.disableAutoSend} onChange={(v) => patch({ disableAutoSend: v })} />
-        </div>
-
-        <div className="toggle-row">
-          <div className="text">
-            <div className="t">{t('otygrovka.record')}</div>
-            <div className="d">{t('otygrovka.recordDesc')}</div>
-          </div>
-          <Toggle on={draft.recordVideo} onChange={(v) => patch({ recordVideo: v })} />
+        <div className="muted" style={{ fontSize: 13, margin: '14px 0' }}>
+          {t('otygrovka.hint')}
         </div>
 
         <button
           className="btn red"
-          style={{ marginTop: 12 }}
           onClick={() => {
             if (confirm(t('otygrovka.confirmDelete', { name: original?.name ?? '' }))) {
               deleteOtygrovka(profile.id, draft.id)

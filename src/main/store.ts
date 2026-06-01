@@ -21,13 +21,13 @@ function makeLink(): string {
 }
 
 export function newMessage(partial: Partial<RPMessage> = {}): RPMessage {
-  return { id: nanoid(), text: 'Тестовое сообщение', delayMs: 1000, ...partial }
+  return { id: nanoid(), text: 'Текст скрипта', delayMs: 0, ...partial }
 }
 
 export function newOtygrovka(partial: Partial<Otygrovka> = {}): Otygrovka {
   return {
     id: nanoid(),
-    name: 'Новая отыгровка',
+    name: 'Новый бинд',
     hotkey: '',
     messages: [newMessage()],
     disableAutoSend: false,

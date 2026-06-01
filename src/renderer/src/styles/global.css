@@ -1,4 +1,6 @@
 :root {
+  /* Тёмная схема для нативных контролов (select, скроллбары и т.п.). */
+  color-scheme: dark;
   --bg: #15161b;
   --bg-rail: #0f1014;
   --panel: #1a1c22;
@@ -22,6 +24,7 @@
 
 /* Светлая тема: переопределение переменных. Цвета подобраны под читаемость. */
 [data-theme='light'] {
+  color-scheme: light;
   --bg: #eef0f4;
   --bg-rail: #e2e5ea;
   --panel: #e8eaef;
@@ -388,6 +391,14 @@ textarea.input {
   resize: vertical;
   min-height: 52px;
 }
+select.input {
+  color: var(--text);
+  background-color: var(--panel-2);
+}
+select.input option {
+  color: var(--text);
+  background-color: var(--panel-2);
+}
 
 /* ---------- Переключатель ---------- */
 .toggle {
@@ -621,6 +632,56 @@ textarea.input {
 }
 .update-block .btn {
   min-width: 220px;
+}
+
+/* Справка: шаги с иллюстрациями */
+.help-step {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 14px;
+}
+.help-img {
+  width: 220px;
+  min-width: 220px;
+  height: auto;
+  border-radius: 8px;
+}
+@media (max-width: 720px) {
+  .help-step {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .help-img {
+    width: 100%;
+  }
+}
+
+/* Модальное окно */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: grid;
+  place-items: center;
+  z-index: 100;
+}
+.modal {
+  width: 460px;
+  max-width: calc(100vw - 48px);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+.modal-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 14px;
 }
 
 /* Скроллбар */

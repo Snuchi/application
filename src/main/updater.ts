@@ -10,7 +10,12 @@ let lastStatus: UpdateStatus = { state: 'idle' }
 function broadcast(status: UpdateStatus): void {
   lastStatus = status
   for (const win of BrowserWindow.getAllWindows()) {
-    win.webContents.send(IPC.EvtUpdate, status)
+    if (win.isDestroyed() || win.webContents.isDestroyed()) continue
+    try {
+      win.webContents.send(IPC.EvtUpdate, status)
+    } catch {
+      /* окно закрылось — игнорируем */
+    }
   }
 }
 

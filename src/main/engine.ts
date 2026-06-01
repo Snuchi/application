@@ -20,7 +20,13 @@ class Engine {
 
   private broadcast(channel: string, payload: unknown): void {
     for (const win of BrowserWindow.getAllWindows()) {
-      win.webContents.send(channel, payload)
+      // Окно/контент могли быть уничтожены во время асинхронного проигрывания.
+      if (win.isDestroyed() || win.webContents.isDestroyed()) continue
+      try {
+        win.webContents.send(channel, payload)
+      } catch {
+        /* окно закрылось между проверкой и отправкой — игнорируем */
+      }
     }
   }
 
@@ -86,7 +92,8 @@ class Engine {
         chatKey: profile.chatKey,
         pasteDelayMs: profile.pasteDelayMs,
         messages: otygrovka.messages,
-        manual: otygrovka.disableAutoSend,
+        // Всегда ручной режим: вставляем текст, Enter пользователь жмёт сам.
+        manual: true,
         log: (l) => this.log(l),
         shouldAbort: () => this.abort
       })

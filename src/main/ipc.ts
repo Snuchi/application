@@ -52,7 +52,12 @@ export function registerIpc(): void {
     await hotkeys.start()
     hotkeys.beginCapture((combo) => {
       for (const win of BrowserWindow.getAllWindows()) {
-        win.webContents.send(IPC.EvtHotkeyCaptured, combo)
+        if (win.isDestroyed() || win.webContents.isDestroyed()) continue
+        try {
+          win.webContents.send(IPC.EvtHotkeyCaptured, combo)
+        } catch {
+          /* окно закрылось — игнорируем */
+        }
       }
     })
     return hotkeys.isNativeAvailable
