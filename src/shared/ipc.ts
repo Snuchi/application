@@ -18,10 +18,6 @@ export const IPC = {
   EngineState: 'engine:state',
   EnginePlay: 'engine:play',
 
-  // Каталог
-  CatalogList: 'catalog:list',
-  CatalogInstall: 'catalog:install',
-
   // Хоткеи / захват клавиш
   HotkeyCaptureStart: 'hotkey:capture-start',
   HotkeyCaptureStop: 'hotkey:capture-stop',

@@ -1,11 +1,22 @@
 import { useStore } from '../store'
 import { useT } from '../i18n'
+import { decodeProfile } from '../share'
 import { Breadcrumbs } from '../components/Chrome'
 import { ChevronRight } from '../components/Icons'
 
 export function ProfilesPage(): JSX.Element {
-  const { profiles, engine, go, createProfile, refreshProfiles } = useStore()
+  const { profiles, engine, go, createProfile, importProfile, refreshProfiles } = useStore()
   const t = useT()
+
+  const onImport = (): void => {
+    const code = prompt(t('profiles.importPrompt'))
+    if (!code) return
+    try {
+      importProfile(decodeProfile(code))
+    } catch {
+      alert(t('profiles.importError'))
+    }
+  }
 
   return (
     <>
@@ -39,6 +50,9 @@ export function ProfilesPage(): JSX.Element {
             {t('profiles.refresh')}
           </button>
         </div>
+        <button className="btn block" style={{ marginTop: 12 }} onClick={onImport}>
+          {t('profiles.import')}
+        </button>
       </div>
     </>
   )

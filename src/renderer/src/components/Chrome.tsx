@@ -1,13 +1,13 @@
 import { useStore, View } from '../store'
 import { useT } from '../i18n'
 import { Logo } from './Logo'
-import { Catalog, Chat, ChevronLeft, Close, Help, Maximize, Minimize, Settings } from './Icons'
+import { Chat, ChevronLeft, Close, Help, Maximize, Minimize, Settings } from './Icons'
 
 /** Кастомный титлбар (окно без рамки). */
 export function TitleBar(): JSX.Element {
   return (
     <div className="titlebar">
-      <span className="title">AVN</span>
+      <span className="title">AVN Binder</span>
       <div className="win-controls">
         <button className="win-btn" onClick={() => window.api.windowMinimize()}>
           <Minimize size={14} />
@@ -44,7 +44,6 @@ export function Nav(): JSX.Element {
   const t = useT()
   const items: { view: View; label: string; icon: JSX.Element }[] = [
     { view: 'profiles', label: t('nav.profiles'), icon: <Chat size={16} /> },
-    { view: 'catalog', label: t('nav.catalog'), icon: <Catalog size={16} /> },
     { view: 'help', label: t('nav.help'), icon: <Help size={16} /> },
     { view: 'settings', label: t('nav.settings'), icon: <Settings size={16} /> }
   ]

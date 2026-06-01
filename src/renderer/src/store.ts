@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import type { AppSettings, EngineState, Otygrovka, Profile, UpdateStatus } from '@shared/types'
 
-export type View = 'profiles' | 'profile' | 'otygrovka' | 'catalog' | 'help' | 'settings'
+export type View = 'profiles' | 'profile' | 'otygrovka' | 'help' | 'settings'
 
 interface Nav {
   view: View
@@ -42,6 +42,7 @@ interface State {
   refreshProfiles: () => Promise<void>
   refreshSettings: () => Promise<void>
   createProfile: () => Promise<void>
+  importProfile: (data: Partial<Profile>) => Promise<void>
   updateProfile: (id: string, patch: Partial<Profile>) => Promise<void>
   deleteProfile: (id: string) => Promise<void>
   updateSettings: (patch: Partial<AppSettings>) => Promise<void>
@@ -81,6 +82,12 @@ export const useStore = create<State>((set, get) => ({
 
   createProfile: async () => {
     const profile = await window.api.createProfile()
+    await get().refreshProfiles()
+    get().go('profile', profile.id)
+  },
+
+  importProfile: async (data) => {
+    const profile = await window.api.createProfile(data)
     await get().refreshProfiles()
     get().go('profile', profile.id)
   },

@@ -60,15 +60,6 @@ export function SettingsPage(): JSX.Element {
           </div>
         </div>
 
-        <div className="field">
-          <div className="field-label">{t('settings.insertKey')}</div>
-          <input
-            className="input"
-            defaultValue={settings.insertKey}
-            onBlur={(e) => updateSettings({ insertKey: e.target.value.trim() || 'Insert' })}
-          />
-        </div>
-
         {/* Горячие клавиши оверлея */}
         <div className="toggle-row">
           <div className="text">
@@ -121,10 +112,6 @@ export function SettingsPage(): JSX.Element {
           >
             {t('settings.checkUpdates')}
           </button>
-        </div>
-
-        <div className="empty" style={{ paddingTop: 24 }}>
-          {t('footer')}
         </div>
       </div>
     </>

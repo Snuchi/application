@@ -1,5 +1,5 @@
-appId: com.binder.app
-productName: Binder
+appId: com.avn.binder
+productName: AVN Binder
 directories:
   buildResources: build
   output: dist
@@ -17,7 +17,7 @@ win:
   target:
     - nsis
     - zip
-  artifactName: ${productName}-${version}.${ext}
+  artifactName: AVN-Binder-${version}.${ext}
 nsis:
   oneClick: false
   allowToChangeInstallationDirectory: true

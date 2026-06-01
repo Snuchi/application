@@ -1,6 +1,6 @@
 import { app, BrowserWindow, Menu, nativeImage, Tray, shell } from 'electron'
 import { join } from 'path'
-import { registerIpc } from './ipc'
+import { applyAutoLaunch, registerIpc } from './ipc'
 import { engine } from './engine'
 import { hotkeys } from './hotkeys'
 import { db } from './store'
@@ -18,7 +18,7 @@ function createWindow(): void {
     show: false,
     frame: false,
     backgroundColor: '#15161b',
-    title: 'Binder',
+    title: 'AVN Binder',
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false,
@@ -56,7 +56,7 @@ function createTray(): void {
   // Пустая иконка-заглушка (заменяется ассетом при сборке).
   const image = nativeImage.createEmpty()
   tray = new Tray(image)
-  tray.setToolTip('Binder')
+  tray.setToolTip('AVN Binder')
   const menu = Menu.buildFromTemplate([
     { label: 'Открыть', click: () => mainWindow?.show() },
     { label: 'Остановить биндер', click: () => engine.stop() },
@@ -91,6 +91,7 @@ if (!gotLock) {
     createWindow()
     createTray()
     initUpdater()
+    applyAutoLaunch(db.getSettings().autoLaunch)
 
     app.on('activate', () => {
       if (BrowserWindow.getAllWindows().length === 0) createWindow()

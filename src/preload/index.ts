@@ -1,13 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { IPC } from '../shared/ipc'
-import {
-  AppSettings,
-  CatalogItem,
-  EngineState,
-  Otygrovka,
-  Profile,
-  UpdateStatus
-} from '../shared/types'
+import { AppSettings, EngineState, Otygrovka, Profile, UpdateStatus } from '../shared/types'
 
 const api = {
   // Профили
@@ -32,12 +25,6 @@ const api = {
   engineState: (): Promise<EngineState> => ipcRenderer.invoke(IPC.EngineState),
   enginePlay: (profileId: string, otygrovkaId: string): Promise<void> =>
     ipcRenderer.invoke(IPC.EnginePlay, profileId, otygrovkaId),
-
-  // Каталог
-  catalogList: (query?: string): Promise<CatalogItem[]> =>
-    ipcRenderer.invoke(IPC.CatalogList, query),
-  catalogInstall: (catalogId: string): Promise<Profile | null> =>
-    ipcRenderer.invoke(IPC.CatalogInstall, catalogId),
 
   // Захват хоткея
   hotkeyCaptureStart: (): Promise<boolean> => ipcRenderer.invoke(IPC.HotkeyCaptureStart),

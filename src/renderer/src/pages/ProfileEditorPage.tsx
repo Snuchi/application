@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useStore } from '../store'
 import { useT } from '../i18n'
+import { encodeProfile } from '../share'
 import { Breadcrumbs } from '../components/Chrome'
-import { Toggle } from '../components/Toggle'
 import { ChevronRight, Copy, Plus } from '../components/Icons'
 
 export function ProfileEditorPage(): JSX.Element {
@@ -39,7 +39,8 @@ export function ProfileEditorPage(): JSX.Element {
   }
 
   const isRunning = engine.activeProfileId === profile.id
-  const copyLink = (): void => void navigator.clipboard.writeText(profile.link)
+  const shareCode = encodeProfile(profile)
+  const copyShare = (): void => void navigator.clipboard.writeText(shareCode)
 
   return (
     <>
@@ -93,55 +94,25 @@ export function ProfileEditorPage(): JSX.Element {
           }}
         >
           <span className="row" style={{ justifyContent: 'center', gap: 8 }}>
-            <Plus size={16} /> {t('profile.addOtygrovka')}
+            <Plus size={16} /> {t('profile.addBind')}
           </span>
         </button>
 
         <div className="divider" />
 
-        {/* Публичный профиль */}
-        <div className="toggle-row" style={{ borderTop: 'none', paddingTop: 0 }}>
-          <div className="text">
-            <div className="t">{t('profile.public')}</div>
-            <div className="d">{t('profile.publicDesc')}</div>
-          </div>
-          <Toggle on={profile.isPublic} onChange={(v) => updateProfile(profile.id, { isPublic: v })} />
-        </div>
-
-        {/* Ссылка профиля */}
-        <div className="field" style={{ marginTop: 12 }}>
-          <div className="field-label">{t('profile.link')}</div>
+        {/* Ссылка для импорта (поделиться профилем) */}
+        <div className="field">
+          <div className="field-label">{t('profile.share')}</div>
           <div className="copy-field">
-            <span className="link">{profile.link}</span>
-            <span className="count">{profile.views}</span>
-            <button className="btn sm" style={{ borderRadius: 0 }} onClick={copyLink}>
+            <span className="link">{shareCode}</span>
+            <button className="btn sm" style={{ borderRadius: 0 }} onClick={copyShare}>
               <span className="row" style={{ gap: 6 }}>
                 <Copy size={14} /> {t('profile.copy')}
               </span>
             </button>
           </div>
-        </div>
-
-        {/* Клавиша чата + задержка */}
-        <div className="grid-2">
-          <div className="field">
-            <div className="field-label">{t('profile.chatKey')}</div>
-            <input
-              className="input"
-              defaultValue={profile.chatKey}
-              maxLength={12}
-              onBlur={(e) => updateProfile(profile.id, { chatKey: e.target.value.trim() || 'T' })}
-            />
-          </div>
-          <div className="field">
-            <div className="field-label">{t('profile.pasteDelay')}</div>
-            <input
-              className="input"
-              type="number"
-              min={0}
-              defaultValue={profile.pasteDelayMs}
-              onBlur={(e) => updateProfile(profile.id, { pasteDelayMs: Math.max(0, Number(e.target.value) || 0) })}
-            />
+          <div className="muted" style={{ fontSize: 12, marginTop: 6 }}>
+            {t('profile.shareHint')}
           </div>
         </div>
 
