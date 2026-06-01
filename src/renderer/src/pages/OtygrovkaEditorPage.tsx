@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { nanoid } from 'nanoid'
 import type { Otygrovka, RPMessage } from '@shared/types'
 import { useStore } from '../store'
+import { useT } from '../i18n'
 import { Breadcrumbs } from '../components/Chrome'
 import { Toggle } from '../components/Toggle'
 import { Plus, Trash } from '../components/Icons'
@@ -12,6 +13,7 @@ function newMessage(): RPMessage {
 
 export function OtygrovkaEditorPage(): JSX.Element {
   const { nav, profiles, go, updateOtygrovka, deleteOtygrovka, setSaveBox } = useStore()
+  const t = useT()
 
   const profile = profiles.find((p) => p.id === nav.profileId)
   const original = profile?.otygrovki.find((o) => o.id === nav.otygrovkaId)
@@ -19,7 +21,6 @@ export function OtygrovkaEditorPage(): JSX.Element {
   const [draft, setDraft] = useState<Otygrovka | null>(original ?? null)
   const [capturing, setCapturing] = useState(false)
 
-  // Сброс черновика при смене отыгровки.
   useEffect(() => {
     setDraft(original ? structuredClone(original) : null)
   }, [original?.id]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -29,7 +30,6 @@ export function OtygrovkaEditorPage(): JSX.Element {
     [draft, original]
   )
 
-  // Управление блоком «Сохранить изменения?» в навигации.
   useEffect(() => {
     if (dirty && draft && profile) {
       setSaveBox({
@@ -42,7 +42,6 @@ export function OtygrovkaEditorPage(): JSX.Element {
     return () => setSaveBox(null)
   }, [dirty, draft, profile, original, setSaveBox, updateOtygrovka])
 
-  // Захват горячей клавиши.
   useEffect(() => {
     const off = window.api.onHotkeyCaptured((combo) => {
       setDraft((d) => (d ? { ...d, hotkey: combo } : d))
@@ -54,9 +53,9 @@ export function OtygrovkaEditorPage(): JSX.Element {
   if (!profile || !draft) {
     return (
       <>
-        <Breadcrumbs trail={[{ label: 'Мои профили', onClick: () => go('profiles') }]} onBack={() => go('profiles')} />
+        <Breadcrumbs trail={[{ label: t('nav.profiles'), onClick: () => go('profiles') }]} onBack={() => go('profiles')} />
         <div className="content-scroll">
-          <div className="empty">Отыгровка не найдена.</div>
+          <div className="empty">{t('otygrovka.notFound')}</div>
         </div>
       </>
     )
@@ -70,14 +69,13 @@ export function OtygrovkaEditorPage(): JSX.Element {
     setCapturing(true)
     const native = await window.api.hotkeyCaptureStart()
     if (!native) {
-      // Нативный хук недоступен (например, не Windows) — отменяем захват.
       setCapturing(false)
-      alert('Захват клавиш недоступен: нативный модуль не загружен (нужен запуск на Windows).')
+      alert(t('otygrovka.captureUnavailable'))
     }
   }
 
   const importMessages = (): void => {
-    const raw = prompt('Вставьте сообщения, по одному на строку:')
+    const raw = prompt(t('otygrovka.importPrompt'))
     if (!raw) return
     const imported = raw
       .split('\n')
@@ -91,40 +89,35 @@ export function OtygrovkaEditorPage(): JSX.Element {
     <>
       <Breadcrumbs
         trail={[
-          { label: 'Мои профили', onClick: () => go('profiles') },
+          { label: t('nav.profiles'), onClick: () => go('profiles') },
           { label: profile.name, onClick: () => go('profile', profile.id) },
-          { label: original?.name ?? 'Отыгровка' }
+          { label: original?.name ?? t('otygrovka.default') }
         ]}
         onBack={() => go('profile', profile.id)}
       />
       <div className="content-scroll">
         <div className="grid-2">
           <div className="field">
-            <div className="field-label">Название отыгровки</div>
-            <input
-              className="input"
-              value={draft.name}
-              onChange={(e) => patch({ name: e.target.value })}
-            />
+            <div className="field-label">{t('otygrovka.name')}</div>
+            <input className="input" value={draft.name} onChange={(e) => patch({ name: e.target.value })} />
           </div>
           <div className="field">
-            <div className="field-label">Горячие клавиши</div>
+            <div className="field-label">{t('otygrovka.hotkey')}</div>
             <input
               className="input"
               readOnly
-              value={capturing ? 'Нажмите клавиши…' : draft.hotkey || 'Не назначено'}
+              value={capturing ? t('otygrovka.pressKeys') : draft.hotkey || t('profile.notAssigned')}
               onClick={startCapture}
               style={{ cursor: 'pointer', borderColor: capturing ? 'var(--accent)' : undefined }}
             />
           </div>
         </div>
 
-        {/* Сообщения */}
         {draft.messages.map((m, i) => (
           <div className="msg-card" key={m.id}>
             <div className="head">
               <span className="field-label" style={{ margin: 0 }}>
-                Сообщение {i + 1}
+                {t('otygrovka.message')} {i + 1}
               </span>
               <input
                 className="ms-badge"
@@ -133,7 +126,7 @@ export function OtygrovkaEditorPage(): JSX.Element {
                 min={0}
                 value={m.delayMs}
                 onChange={(e) => patchMsg(m.id, { delayMs: Math.max(0, Number(e.target.value) || 0) })}
-                title="Задержка перед сообщением, мс"
+                title="ms"
               />
               <span className="muted" style={{ fontSize: 11 }}>
                 ms
@@ -144,22 +137,18 @@ export function OtygrovkaEditorPage(): JSX.Element {
                 </button>
               )}
             </div>
-            <textarea
-              className="input"
-              value={m.text}
-              onChange={(e) => patchMsg(m.id, { text: e.target.value })}
-            />
+            <textarea className="input" value={m.text} onChange={(e) => patchMsg(m.id, { text: e.target.value })} />
           </div>
         ))}
 
         <div className="grid-2">
           <button className="btn" onClick={() => patch({ messages: [...draft.messages, newMessage()] })}>
             <span className="row" style={{ justifyContent: 'center', gap: 8 }}>
-              <Plus size={15} /> Добавить сообщение
+              <Plus size={15} /> {t('otygrovka.addMessage')}
             </span>
           </button>
           <button className="btn" onClick={importMessages}>
-            Импорт сообщений
+            {t('otygrovka.importMessages')}
           </button>
         </div>
 
@@ -167,16 +156,16 @@ export function OtygrovkaEditorPage(): JSX.Element {
 
         <div className="toggle-row" style={{ borderTop: 'none' }}>
           <div className="text">
-            <div className="t">Отключить автоматическую отправку</div>
-            <div className="d">Каждое сообщение будет вставляться лишь после нажатия клавиши Insert.</div>
+            <div className="t">{t('otygrovka.disableAuto')}</div>
+            <div className="d">{t('otygrovka.disableAutoDesc')}</div>
           </div>
           <Toggle on={draft.disableAutoSend} onChange={(v) => patch({ disableAutoSend: v })} />
         </div>
 
         <div className="toggle-row">
           <div className="text">
-            <div className="t">Запись отыгровки</div>
-            <div className="d">Записывает видео с экрана во время отыгровки.</div>
+            <div className="t">{t('otygrovka.record')}</div>
+            <div className="d">{t('otygrovka.recordDesc')}</div>
           </div>
           <Toggle on={draft.recordVideo} onChange={(v) => patch({ recordVideo: v })} />
         </div>
@@ -185,13 +174,13 @@ export function OtygrovkaEditorPage(): JSX.Element {
           className="btn red"
           style={{ marginTop: 12 }}
           onClick={() => {
-            if (confirm(`Удалить отыгровку «${original?.name}»?`)) {
+            if (confirm(t('otygrovka.confirmDelete', { name: original?.name ?? '' }))) {
               deleteOtygrovka(profile.id, draft.id)
               go('profile', profile.id)
             }
           }}
         >
-          Удалить отыгровку
+          {t('otygrovka.delete')}
         </button>
       </div>
     </>

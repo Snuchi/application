@@ -1,34 +1,21 @@
 import { Breadcrumbs } from '../components/Chrome'
-
-const FAQ: { q: string; a: string }[] = [
-  {
-    q: 'Что такое отыгровка?',
-    a: 'Отыгровка — это набор сообщений, который вводится в игровой чат по нажатию горячей клавиши. Удобно для RP-действий: осмотр, ремонт, оформление и т.д.'
-  },
-  {
-    q: 'Почему не срабатывают горячие клавиши?',
-    a: 'Игры часто перехватывают ввод. Запустите Binder от имени администратора — тогда низкоуровневый хук сможет ловить нажатия поверх игры.'
-  },
-  {
-    q: 'Как настроить клавишу открытия чата?',
-    a: 'В настройках профиля укажите клавишу открытия чата (по умолчанию T) и задержку перед вставкой текста, чтобы чат успел открыться.'
-  },
-  {
-    q: 'Что делает «Отключить автоматическую отправку»?',
-    a: 'В этом режиме текст вставляется в чат, но не отправляется автоматически — вы подтверждаете отправку клавишей Insert. Полезно, когда нужно поправить сообщение.'
-  },
-  {
-    q: 'Как поделиться профилем?',
-    a: 'Включите «Публичный профиль» — он появится в каталоге, а ссылку профиля можно скопировать и отправить друзьям.'
-  }
-]
+import { useT } from '../i18n'
 
 export function HelpPage(): JSX.Element {
+  const t = useT()
+  const faq = [
+    { q: t('help.q1'), a: t('help.a1') },
+    { q: t('help.q2'), a: t('help.a2') },
+    { q: t('help.q3'), a: t('help.a3') },
+    { q: t('help.q4'), a: t('help.a4') },
+    { q: t('help.q5'), a: t('help.a5') }
+  ]
+
   return (
     <>
-      <Breadcrumbs trail={[{ label: 'Справка' }]} />
+      <Breadcrumbs trail={[{ label: t('nav.help') }]} />
       <div className="content-scroll">
-        {FAQ.map((item, i) => (
+        {faq.map((item, i) => (
           <div className="msg-card" key={i} style={{ padding: 16 }}>
             <div style={{ fontWeight: 700, marginBottom: 6 }}>{item.q}</div>
             <div className="muted" style={{ fontSize: 13, lineHeight: 1.5 }}>
@@ -37,7 +24,7 @@ export function HelpPage(): JSX.Element {
           </div>
         ))}
         <div className="empty" style={{ paddingTop: 24 }}>
-          Binder · клон-проект для обучения · v0.1.1
+          {t('footer')}
         </div>
       </div>
     </>

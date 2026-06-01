@@ -45,7 +45,7 @@ export interface Profile {
 
 /** Глобальные настройки приложения. */
 export interface AppSettings {
-  language: 'ru' | 'en'
+  language: 'ru' | 'uk'
   theme: 'dark' | 'light'
   /** Запускать приложение вместе с системой. */
   autoLaunch: boolean
@@ -53,6 +53,10 @@ export interface AppSettings {
   minimizeToTray: boolean
   /** Клавиша подтверждения ручной вставки (когда отключён автоввод). */
   insertKey: string
+  /** Клавиша включения/выключения оверлея. */
+  overlayToggleKey: string
+  /** Клавиша скрытия/показа оверлея. */
+  overlayHideKey: string
   /** Запущен ли процесс с правами администратора (для глобальных хоткеев). */
   runningAsAdmin: boolean
 }
@@ -107,5 +111,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   autoLaunch: false,
   minimizeToTray: true,
   insertKey: 'Insert',
+  overlayToggleKey: 'F4',
+  overlayHideKey: 'F6',
   runningAsAdmin: false
 }

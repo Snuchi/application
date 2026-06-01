@@ -20,6 +20,28 @@
   --radius-sm: 7px;
 }
 
+/* Светлая тема: переопределение переменных. Цвета подобраны под читаемость. */
+[data-theme='light'] {
+  --bg: #eef0f4;
+  --bg-rail: #e2e5ea;
+  --panel: #e8eaef;
+  --panel-2: #ffffff;
+  --card: #ffffff;
+  --card-hover: #f1f2f5;
+  --border: #d3d7df;
+  --text: #1b1d22;
+  --text-dim: #515a68;
+  --text-mute: #79828f;
+  --warn-bg: #fbf2d6;
+  --warn-border: #d8b765;
+}
+[data-theme='light'] .warn {
+  color: #8a6d1a;
+}
+[data-theme='light'] .win-btn:hover {
+  background: #00000010;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -550,6 +572,55 @@ textarea.input {
   color: var(--text-dim);
   font-weight: 600;
   margin: 22px 0 10px;
+}
+
+/* Логотип в рейле */
+.logo-badge {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+}
+
+/* Поле горячей клавиши (настройки оверлея) */
+.key-box {
+  margin-left: auto;
+  min-width: 96px;
+  padding: 10px 18px;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  color: var(--text);
+  text-align: center;
+  transition: 0.12s;
+}
+.key-box:hover {
+  border-color: var(--text-dim);
+}
+.key-box.capturing {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Блок обновлений с кнопкой по центру */
+.update-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+  padding: 8px 0 4px;
+}
+.update-block .t {
+  font-weight: 600;
+}
+.update-block .d {
+  color: var(--text-dim);
+  font-size: 13px;
+}
+.update-block .btn {
+  min-width: 220px;
 }
 
 /* Скроллбар */

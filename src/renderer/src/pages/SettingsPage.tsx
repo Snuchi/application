@@ -1,63 +1,67 @@
 import { useStore } from '../store'
+import { useT } from '../i18n'
 import { Breadcrumbs } from '../components/Chrome'
 import { Toggle } from '../components/Toggle'
+import { HotkeyField } from '../components/HotkeyField'
 
-const UPDATE_LABEL: Record<string, string> = {
-  idle: '',
-  checking: 'Проверяем обновления…',
-  available: 'Найдено обновление, загружается…',
-  'not-available': 'У вас актуальная версия',
-  downloading: 'Загрузка обновления…',
-  downloaded: 'Обновление готово — перезапустите приложение',
-  error: 'Ошибка проверки обновлений',
-  disabled: 'Доступно только в установленной версии'
+const UPDATE_KEY: Record<string, string> = {
+  checking: 'upd.checking',
+  available: 'upd.available',
+  'not-available': 'upd.notAvailable',
+  downloading: 'upd.downloading',
+  downloaded: 'upd.downloaded',
+  error: 'upd.error',
+  disabled: 'upd.disabled'
 }
 
 export function SettingsPage(): JSX.Element {
   const { settings, updateSettings, appVersion, update, checkUpdate } = useStore()
+  const t = useT()
 
   if (!settings) {
     return (
       <>
-        <Breadcrumbs trail={[{ label: 'Настройки' }]} />
+        <Breadcrumbs trail={[{ label: t('nav.settings') }]} />
         <div className="content-scroll">
-          <div className="empty">Загрузка…</div>
+          <div className="empty">…</div>
         </div>
       </>
     )
   }
 
+  const updateText = update.state !== 'idle' && UPDATE_KEY[update.state] ? t(UPDATE_KEY[update.state]) : ''
+
   return (
     <>
-      <Breadcrumbs trail={[{ label: 'Настройки' }]} />
+      <Breadcrumbs trail={[{ label: t('nav.settings') }]} />
       <div className="content-scroll">
         <div className="grid-2">
           <div className="field">
-            <div className="field-label">Язык</div>
+            <div className="field-label">{t('settings.language')}</div>
             <select
               className="input"
               value={settings.language}
-              onChange={(e) => updateSettings({ language: e.target.value as 'ru' | 'en' })}
+              onChange={(e) => updateSettings({ language: e.target.value as 'ru' | 'uk' })}
             >
-              <option value="ru">Русский</option>
-              <option value="en">English</option>
+              <option value="ru">{t('settings.langRu')}</option>
+              <option value="uk">{t('settings.langUk')}</option>
             </select>
           </div>
           <div className="field">
-            <div className="field-label">Тема</div>
+            <div className="field-label">{t('settings.theme')}</div>
             <select
               className="input"
               value={settings.theme}
               onChange={(e) => updateSettings({ theme: e.target.value as 'dark' | 'light' })}
             >
-              <option value="dark">Тёмная</option>
-              <option value="light">Светлая</option>
+              <option value="dark">{t('settings.themeDark')}</option>
+              <option value="light">{t('settings.themeLight')}</option>
             </select>
           </div>
         </div>
 
         <div className="field">
-          <div className="field-label">Клавиша подтверждения ручной вставки</div>
+          <div className="field-label">{t('settings.insertKey')}</div>
           <input
             className="input"
             defaultValue={settings.insertKey}
@@ -65,48 +69,62 @@ export function SettingsPage(): JSX.Element {
           />
         </div>
 
+        {/* Горячие клавиши оверлея */}
         <div className="toggle-row">
           <div className="text">
-            <div className="t">Запуск вместе с системой</div>
-            <div className="d">Запускать Binder автоматически при входе в Windows.</div>
+            <div className="t">{t('settings.overlayToggle')}</div>
+          </div>
+          <HotkeyField
+            value={settings.overlayToggleKey}
+            onChange={(combo) => updateSettings({ overlayToggleKey: combo })}
+          />
+        </div>
+        <div className="toggle-row">
+          <div className="text">
+            <div className="t">{t('settings.overlayHide')}</div>
+          </div>
+          <HotkeyField
+            value={settings.overlayHideKey}
+            onChange={(combo) => updateSettings({ overlayHideKey: combo })}
+          />
+        </div>
+
+        <div className="toggle-row">
+          <div className="text">
+            <div className="t">{t('settings.autoLaunch')}</div>
+            <div className="d">{t('settings.autoLaunchDesc')}</div>
           </div>
           <Toggle on={settings.autoLaunch} onChange={(v) => updateSettings({ autoLaunch: v })} />
         </div>
 
         <div className="toggle-row">
           <div className="text">
-            <div className="t">Сворачивать в трей</div>
-            <div className="d">При закрытии окна приложение продолжит работать в трее.</div>
+            <div className="t">{t('settings.tray')}</div>
+            <div className="d">{t('settings.trayDesc')}</div>
           </div>
           <Toggle on={settings.minimizeToTray} onChange={(v) => updateSettings({ minimizeToTray: v })} />
         </div>
 
+        {/* Обновления — кнопка по центру */}
         <div className="divider" />
-
-        <div className="toggle-row" style={{ borderTop: 'none' }}>
-          <div className="text">
-            <div className="t">Обновления</div>
-            <div className="d">
-              Версия {appVersion || '—'}
-              {update.state !== 'idle' && UPDATE_LABEL[update.state]
-                ? ` · ${UPDATE_LABEL[update.state]}`
-                : ''}
-              {update.state === 'downloading' && update.percent != null
-                ? ` ${update.percent}%`
-                : ''}
-            </div>
+        <div className="update-block">
+          <div className="t">{t('settings.updates')}</div>
+          <div className="d">
+            {t('settings.version')} {appVersion || '—'}
+            {updateText ? ` · ${updateText}` : ''}
+            {update.state === 'downloading' && update.percent != null ? ` ${update.percent}%` : ''}
           </div>
           <button
-            className="btn sm"
+            className="btn"
             disabled={update.state === 'checking' || update.state === 'downloading'}
             onClick={checkUpdate}
           >
-            Проверить обновления
+            {t('settings.checkUpdates')}
           </button>
         </div>
 
         <div className="empty" style={{ paddingTop: 24 }}>
-          Binder v{appVersion || '0.1.1'}
+          {t('footer')}
         </div>
       </div>
     </>

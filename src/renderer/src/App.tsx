@@ -10,11 +10,16 @@ import { HelpPage } from './pages/HelpPage'
 import { SettingsPage } from './pages/SettingsPage'
 
 export default function App(): JSX.Element {
-  const { nav, init } = useStore()
+  const { nav, init, settings } = useStore()
 
   useEffect(() => {
     void init()
   }, [init])
+
+  // Применяем выбранную тему к корню документа.
+  useEffect(() => {
+    document.documentElement.dataset.theme = settings?.theme ?? 'dark'
+  }, [settings?.theme])
 
   return (
     <div className="app">

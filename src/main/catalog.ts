@@ -12,36 +12,8 @@ import { db, newOtygrovka, newProfile } from './store'
 const CATALOG_URL =
   'https://raw.githubusercontent.com/Snuchi/application/claude/youthful-cannon-V2yhe/catalog.json'
 
-/** Встроенный резервный набор (если каталог недоступен). */
-const FALLBACK: CatalogItem[] = [
-  {
-    id: 'demo-medic',
-    name: 'Медик / EMS',
-    author: 'Binder',
-    description: 'Осмотр, реанимация, перевязка.',
-    link: 'https://rpbinder.com/i/MEDIC001',
-    views: 1240,
-    otygrovkiCount: 3,
-    tags: ['медицина', 'EMS'],
-    data: {
-      chatKey: 'T',
-      pasteDelayMs: 120,
-      otygrovki: [
-        {
-          id: 'm-osmotr',
-          name: 'Осмотр',
-          hotkey: '',
-          disableAutoSend: false,
-          recordVideo: false,
-          messages: [
-            { id: '1', text: '/me осматривает пострадавшего на наличие травм', delayMs: 800 },
-            { id: '2', text: '/do Видимых повреждений не обнаружено.', delayMs: 1500 }
-          ]
-        }
-      ]
-    }
-  }
-]
+/** Встроенный резервный набор (если каталог недоступен). Сейчас пуст. */
+const FALLBACK: CatalogItem[] = []
 
 let cache: CatalogItem[] | null = null
 
@@ -88,11 +60,11 @@ export const catalog = {
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data = (await res.json()) as { items?: CatalogItem[] }
       const items = Array.isArray(data) ? (data as CatalogItem[]) : data.items
-      if (items?.length) {
+      if (Array.isArray(items)) {
         cache = items
         return items
       }
-      throw new Error('пустой каталог')
+      throw new Error('неверный формат каталога')
     } catch (err) {
       console.warn('[catalog] не удалось загрузить, использую встроенный набор:', (err as Error).message)
       return FALLBACK

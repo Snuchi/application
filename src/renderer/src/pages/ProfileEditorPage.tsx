@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useStore } from '../store'
+import { useT } from '../i18n'
 import { Breadcrumbs } from '../components/Chrome'
 import { Toggle } from '../components/Toggle'
 import { ChevronRight, Copy, Plus } from '../components/Icons'
@@ -17,6 +18,7 @@ export function ProfileEditorPage(): JSX.Element {
     startEngine,
     stopEngine
   } = useStore()
+  const t = useT()
 
   const profile = profiles.find((p) => p.id === nav.profileId)
   const [name, setName] = useState(profile?.name ?? '')
@@ -28,9 +30,9 @@ export function ProfileEditorPage(): JSX.Element {
   if (!profile) {
     return (
       <>
-        <Breadcrumbs trail={[{ label: 'Мои профили', onClick: () => go('profiles') }]} onBack={() => go('profiles')} />
+        <Breadcrumbs trail={[{ label: t('nav.profiles'), onClick: () => go('profiles') }]} onBack={() => go('profiles')} />
         <div className="content-scroll">
-          <div className="empty">Профиль не найден.</div>
+          <div className="empty">{t('profiles.notFound')}</div>
         </div>
       </>
     )
@@ -42,13 +44,13 @@ export function ProfileEditorPage(): JSX.Element {
   return (
     <>
       <Breadcrumbs
-        trail={[{ label: 'Мои профили', onClick: () => go('profiles') }, { label: profile.name }]}
+        trail={[{ label: t('nav.profiles'), onClick: () => go('profiles') }, { label: profile.name }]}
         onBack={() => go('profiles')}
       />
       <div className="content-scroll">
         {/* Название + запуск */}
         <div className="field">
-          <div className="field-label">Название профиля</div>
+          <div className="field-label">{t('profile.name')}</div>
           <div className="row">
             <input
               className="input"
@@ -58,34 +60,24 @@ export function ProfileEditorPage(): JSX.Element {
             />
             {isRunning ? (
               <button className="btn red" style={{ minWidth: 130 }} onClick={stopEngine}>
-                Остановить
+                {t('profile.stop')}
               </button>
             ) : (
-              <button
-                className="btn green"
-                style={{ minWidth: 130 }}
-                onClick={() => startEngine(profile.id)}
-              >
-                Запустить
+              <button className="btn green" style={{ minWidth: 130 }} onClick={() => startEngine(profile.id)}>
+                {t('profile.start')}
               </button>
             )}
           </div>
         </div>
 
-        <div className="warn">
-          Горячие клавиши могут не работать, запустите биндер от имени админа.
-        </div>
+        <div className="warn">{t('profile.warn')}</div>
 
         {/* Отыгровки */}
         {profile.otygrovki.map((o) => (
-          <button
-            key={o.id}
-            className="list-row"
-            onClick={() => go('otygrovka', profile.id, o.id)}
-          >
+          <button key={o.id} className="list-row" onClick={() => go('otygrovka', profile.id, o.id)}>
             {o.name}
             <span className="muted" style={{ marginLeft: 12, fontWeight: 400 }}>
-              {o.hotkey || 'Не назначено'}
+              {o.hotkey || t('profile.notAssigned')}
             </span>
             <span className="chev">
               <ChevronRight size={18} />
@@ -101,7 +93,7 @@ export function ProfileEditorPage(): JSX.Element {
           }}
         >
           <span className="row" style={{ justifyContent: 'center', gap: 8 }}>
-            <Plus size={16} /> Добавить отыгровку
+            <Plus size={16} /> {t('profile.addOtygrovka')}
           </span>
         </button>
 
@@ -110,21 +102,21 @@ export function ProfileEditorPage(): JSX.Element {
         {/* Публичный профиль */}
         <div className="toggle-row" style={{ borderTop: 'none', paddingTop: 0 }}>
           <div className="text">
-            <div className="t">Публичный профиль</div>
-            <div className="d">Если эта опция включена, то профиль будет доступен в общем каталоге.</div>
+            <div className="t">{t('profile.public')}</div>
+            <div className="d">{t('profile.publicDesc')}</div>
           </div>
           <Toggle on={profile.isPublic} onChange={(v) => updateProfile(profile.id, { isPublic: v })} />
         </div>
 
         {/* Ссылка профиля */}
         <div className="field" style={{ marginTop: 12 }}>
-          <div className="field-label">Ссылка профиля</div>
+          <div className="field-label">{t('profile.link')}</div>
           <div className="copy-field">
             <span className="link">{profile.link}</span>
             <span className="count">{profile.views}</span>
             <button className="btn sm" style={{ borderRadius: 0 }} onClick={copyLink}>
               <span className="row" style={{ gap: 6 }}>
-                <Copy size={14} /> Копировать
+                <Copy size={14} /> {t('profile.copy')}
               </span>
             </button>
           </div>
@@ -133,7 +125,7 @@ export function ProfileEditorPage(): JSX.Element {
         {/* Клавиша чата + задержка */}
         <div className="grid-2">
           <div className="field">
-            <div className="field-label">Клавиша открытия чата</div>
+            <div className="field-label">{t('profile.chatKey')}</div>
             <input
               className="input"
               defaultValue={profile.chatKey}
@@ -142,15 +134,13 @@ export function ProfileEditorPage(): JSX.Element {
             />
           </div>
           <div className="field">
-            <div className="field-label">Задержка перед вставкой (мс.)</div>
+            <div className="field-label">{t('profile.pasteDelay')}</div>
             <input
               className="input"
               type="number"
               min={0}
               defaultValue={profile.pasteDelayMs}
-              onBlur={(e) =>
-                updateProfile(profile.id, { pasteDelayMs: Math.max(0, Number(e.target.value) || 0) })
-              }
+              onBlur={(e) => updateProfile(profile.id, { pasteDelayMs: Math.max(0, Number(e.target.value) || 0) })}
             />
           </div>
         </div>
@@ -158,16 +148,16 @@ export function ProfileEditorPage(): JSX.Element {
         <button
           className="btn red"
           onClick={() => {
-            if (confirm(`Удалить профиль «${profile.name}»?`)) deleteProfile(profile.id)
+            if (confirm(t('profile.confirmDelete', { name: profile.name }))) deleteProfile(profile.id)
           }}
         >
-          Удалить профиль
+          {t('profile.delete')}
         </button>
 
         {/* Лог проигрывания */}
         {isRunning && logs.length > 0 && (
           <>
-            <div className="section-label">Журнал</div>
+            <div className="section-label">{t('profile.log')}</div>
             <div className="log">
               {logs.map((l, i) => (
                 <div key={i}>

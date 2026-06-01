@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
 import type { CatalogItem } from '@shared/types'
 import { useStore } from '../store'
+import { useT } from '../i18n'
 import { Breadcrumbs } from '../components/Chrome'
 import { Search } from '../components/Icons'
 
 export function CatalogPage(): JSX.Element {
   const { refreshProfiles, go } = useStore()
+  const t = useT()
   const [items, setItems] = useState<CatalogItem[]>([])
   const [query, setQuery] = useState('')
   const [installing, setInstalling] = useState<string | null>(null)
@@ -28,7 +30,7 @@ export function CatalogPage(): JSX.Element {
 
   return (
     <>
-      <Breadcrumbs trail={[{ label: 'Каталог' }]} />
+      <Breadcrumbs trail={[{ label: t('nav.catalog') }]} />
       <div className="content-scroll">
         <div className="copy-field" style={{ marginBottom: 18 }}>
           <span style={{ padding: '0 12px', color: 'var(--text-mute)' }}>
@@ -37,7 +39,7 @@ export function CatalogPage(): JSX.Element {
           <input
             className="input"
             style={{ border: 'none', background: 'transparent' }}
-            placeholder="Поиск профилей в каталоге…"
+            placeholder={t('catalog.search')}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
@@ -48,35 +50,31 @@ export function CatalogPage(): JSX.Element {
             <div className="row spread">
               <div style={{ fontWeight: 700, fontSize: 15 }}>{item.name}</div>
               <div className="muted" style={{ fontSize: 13 }}>
-                {item.views} 👁 · {item.otygrovkiCount} отыгр.
+                {item.views} 👁 · {item.otygrovkiCount} {t('catalog.otygrCount')}
               </div>
             </div>
             <div className="muted" style={{ margin: '8px 0', fontSize: 13 }}>
               {item.description}
             </div>
             <div style={{ marginBottom: 10 }}>
-              {item.tags.map((t) => (
-                <span className="tag" key={t}>
-                  {t}
+              {item.tags.map((tag) => (
+                <span className="tag" key={tag}>
+                  {tag}
                 </span>
               ))}
             </div>
             <div className="row spread">
               <span className="muted" style={{ fontSize: 12 }}>
-                Автор: {item.author}
+                {t('catalog.author')}: {item.author}
               </span>
-              <button
-                className="btn green sm"
-                disabled={installing === item.id}
-                onClick={() => install(item)}
-              >
-                {installing === item.id ? 'Установка…' : 'Добавить профиль'}
+              <button className="btn green sm" disabled={installing === item.id} onClick={() => install(item)}>
+                {installing === item.id ? t('catalog.installing') : t('catalog.add')}
               </button>
             </div>
           </div>
         ))}
 
-        {items.length === 0 && <div className="empty">Ничего не найдено.</div>}
+        {items.length === 0 && <div className="empty">{t('catalog.empty')}</div>}
       </div>
     </>
   )

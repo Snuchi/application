@@ -1,23 +1,13 @@
 import { useStore, View } from '../store'
-import {
-  Catalog,
-  Chat,
-  ChevronLeft,
-  Close,
-  Gavel,
-  Help,
-  Maximize,
-  Minimize,
-  Notes,
-  Settings,
-  Translate
-} from './Icons'
+import { useT } from '../i18n'
+import { Logo } from './Logo'
+import { Catalog, Chat, ChevronLeft, Close, Help, Maximize, Minimize, Settings } from './Icons'
 
 /** Кастомный титлбар (окно без рамки). */
 export function TitleBar(): JSX.Element {
   return (
     <div className="titlebar">
-      <span className="title">Binder</span>
+      <span className="title">AVN</span>
       <div className="win-controls">
         <button className="win-btn" onClick={() => window.api.windowMinimize()}>
           <Minimize size={14} />
@@ -33,44 +23,38 @@ export function TitleBar(): JSX.Element {
   )
 }
 
-/** Левый рейл «приложений» (декоративный переключатель разделов). */
+/** Левый рейл с логотипом и активным разделом биндера. */
 export function Rail(): JSX.Element {
   return (
     <div className="rail">
-      <div className="avatar" />
+      <div className="logo-badge">
+        <Logo size={44} />
+      </div>
       <div className="sep" />
-      <div className="rail-icon active" title="Биндер">
+      <div className="rail-icon active" title="Binder">
         <Chat size={22} />
-      </div>
-      <div className="rail-icon" title="Аукцион">
-        <Gavel size={22} />
-      </div>
-      <div className="rail-icon" title="Заметки">
-        <Notes size={22} />
-      </div>
-      <div className="rail-icon" title="Переводчик">
-        <Translate size={22} />
       </div>
     </div>
   )
 }
 
-const NAV: { view: View; label: string; icon: JSX.Element }[] = [
-  { view: 'profiles', label: 'Мои профили', icon: <Chat size={16} /> },
-  { view: 'catalog', label: 'Каталог', icon: <Catalog size={16} /> },
-  { view: 'help', label: 'Справка', icon: <Help size={16} /> },
-  { view: 'settings', label: 'Настройки', icon: <Settings size={16} /> }
-]
-
 /** Колонка навигации с заголовком раздела. */
 export function Nav(): JSX.Element {
   const { nav, go, saveBox } = useStore()
+  const t = useT()
+  const items: { view: View; label: string; icon: JSX.Element }[] = [
+    { view: 'profiles', label: t('nav.profiles'), icon: <Chat size={16} /> },
+    { view: 'catalog', label: t('nav.catalog'), icon: <Catalog size={16} /> },
+    { view: 'help', label: t('nav.help'), icon: <Help size={16} /> },
+    { view: 'settings', label: t('nav.settings'), icon: <Settings size={16} /> }
+  ]
   // Профиль/отыгровка относятся к разделу «Мои профили».
   const activeView = nav.view === 'profile' || nav.view === 'otygrovka' ? 'profiles' : nav.view
+
   return (
     <nav className="nav">
-      <div className="section-title">Отыгровки</div>
-      {NAV.map((item) => (
+      <div className="section-title">{t('nav.section')}</div>
+      {items.map((item) => (
         <button
           key={item.view}
           className={`nav-item ${activeView === item.view ? 'active' : ''}`}
@@ -83,13 +67,13 @@ export function Nav(): JSX.Element {
 
       {saveBox && (
         <div className="save-box">
-          <div className="label">Сохранить изменения?</div>
+          <div className="label">{t('nav.saveChanges')}</div>
           <div className="row">
             <button className="btn ghost sm" style={{ flex: 1 }} onClick={saveBox.onReset}>
-              Сброс
+              {t('common.reset')}
             </button>
             <button className="btn green sm" style={{ flex: 1 }} onClick={saveBox.onSave}>
-              Сохранить
+              {t('common.save')}
             </button>
           </div>
         </div>

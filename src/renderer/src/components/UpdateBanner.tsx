@@ -1,29 +1,23 @@
 import { useStore } from '../store'
+import { useT } from '../i18n'
 
 /** Полоса уведомления об обновлении сверху окна. */
 export function UpdateBanner(): JSX.Element | null {
   const { update, installUpdate } = useStore()
+  const t = useT()
 
   if (update.state === 'available') {
-    return (
-      <div className="update-bar">
-        Доступно обновление {update.version}. Загружается…
-      </div>
-    )
+    return <div className="update-bar">{t('banner.available', { v: update.version ?? '' })}</div>
   }
   if (update.state === 'downloading') {
-    return (
-      <div className="update-bar">
-        Загрузка обновления… {update.percent ?? 0}%
-      </div>
-    )
+    return <div className="update-bar">{t('banner.downloading', { p: update.percent ?? 0 })}</div>
   }
   if (update.state === 'downloaded') {
     return (
       <div className="update-bar ready">
-        <span>Обновление {update.version} готово к установке.</span>
+        <span>{t('banner.ready', { v: update.version ?? '' })}</span>
         <button className="btn green sm" onClick={installUpdate}>
-          Перезапустить и обновить
+          {t('banner.install')}
         </button>
       </div>
     )
