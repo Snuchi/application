@@ -2,7 +2,7 @@ import { BrowserWindow } from 'electron'
 import { EngineState, Otygrovka, Profile } from '../shared/types'
 import { IPC } from '../shared/ipc'
 import { hotkeys } from './hotkeys'
-import { playOtygrovka } from './typer'
+import { inputReady, playOtygrovka } from './typer'
 import { db } from './store'
 
 /**
@@ -53,6 +53,13 @@ class Engine {
     this.state = { running: true, activeProfileId: profileId, playingOtygrovkaId: null }
     this.emitState()
     this.log(`▶ Профиль «${profile.name}» запущен`)
+
+    // Диагностика: доступен ли нативный ввод и сколько хоткеев привязано.
+    const bound = profile.otygrovki.filter((o) => o.hotkey).length
+    this.log(`• Привязано хоткеев: ${bound}, хук клавиш: ${hotkeys.isNativeAvailable ? 'есть' : 'нет'}`)
+    void inputReady().then((ready) =>
+      this.log(`• Движок ввода: ${ready ? 'нативный (готов)' : 'dry-run (модуль не загружен)'}`)
+    )
     return this.state
   }
 

@@ -1,14 +1,12 @@
 /**
- * Эмуляция клавиатурного ввода в активное окно игры.
+ * Эмуляция клавиатурного ввода в активное поле ввода.
  *
  * Использует @nut-tree-fork/nut-js (опциональная нативная зависимость).
- * Если модуль не установлен/не собрался — работает в режиме "dry-run",
- * только логируя действия, чтобы остальное приложение оставалось рабочим.
+ * Если модуль не установлен/не собрался — работает в режиме "dry-run".
  *
- * Текст вставляется через буфер обмена (Ctrl+V) — это надёжнее посимвольного
- * ввода и не ломается на раскладке. Перед вводом принудительно отпускаются
- * клавиши-модификаторы (Alt/Ctrl/Shift), которые ещё могут быть зажаты после
- * нажатия горячей комбинации — иначе вместо текста игра получает Alt+буква.
+ * Текст вставляется через буфер обмена (Ctrl+V) — мгновенно и без зависимости
+ * от раскладки. Перед вставкой отпускаются модификаторы (Alt/Ctrl/Shift),
+ * которые ещё могут быть зажаты после горячей комбинации.
  */
 import { clipboard } from 'electron'
 
@@ -22,7 +20,7 @@ async function loadNut(): Promise<NutModule | null> {
   nutReady = true
   try {
     nut = (await import('@nut-tree-fork/nut-js')) as NutModule
-    nut.keyboard.config.autoDelayMs = 3
+    nut.keyboard.config.autoDelayMs = 2
     return nut
   } catch (err) {
     console.warn('[typer] нативный модуль ввода недоступен, режим dry-run:', (err as Error).message)
@@ -32,6 +30,11 @@ async function loadNut(): Promise<NutModule | null> {
 }
 
 export type LogFn = (line: string) => void
+
+/** Готов ли нативный ввод. Для диагностики в журнале. */
+export async function inputReady(): Promise<boolean> {
+  return (await loadNut()) != null
+}
 
 function delay(ms: number): Promise<void> {
   return new Promise((r) => setTimeout(r, Math.max(0, ms)))
@@ -69,31 +72,35 @@ export interface PlayOptions {
   shouldAbort?: () => boolean
 }
 
-/** Вставляет текст через буфер обмена (Ctrl+V), сохраняя и восстанавливая старый буфер. */
+/** Вставляет текст через буфер обмена (Ctrl+V). Буфер НЕ восстанавливается — иначе гонка. */
 async function pasteText(mod: NutModule, text: string): Promise<void> {
-  const prev = clipboard.readText()
   clipboard.writeText(text)
-  await delay(30)
-  await mod.keyboard.pressKey(mod.Key.LeftControl, mod.Key.V)
-  await mod.keyboard.releaseKey(mod.Key.V, mod.Key.LeftControl)
-  // Вернуть прежний буфер обмена через короткую паузу (чтобы вставка успела).
-  await delay(80)
-  clipboard.writeText(prev)
+  await delay(25)
+  // Явно по одной клавише, чтобы вставка точно сработала.
+  await mod.keyboard.pressKey(mod.Key.LeftControl)
+  await mod.keyboard.pressKey(mod.Key.V)
+  await mod.keyboard.releaseKey(mod.Key.V)
+  await mod.keyboard.releaseKey(mod.Key.LeftControl)
 }
 
 /**
- * Вставляет заготовленный текст в активное поле ввода (мессенджер, документ и т.п.).
- * Чат-клавишу НЕ нажимает — текст идёт туда, где стоит курсор.
+ * Вставляет заготовленный текст в активное поле ввода (туда, где стоит курсор).
  */
 export async function playOtygrovka(opts: PlayOptions): Promise<void> {
   const log = opts.log ?? (() => {})
   const mod = await loadNut()
 
-  // Снять модификаторы (Alt/Ctrl/Shift) после горячей комбинации и дать ей отжаться.
-  if (mod) {
-    await releaseModifiers(mod)
-    await delay(120)
+  if (!mod) {
+    for (const msg of opts.messages) {
+      if (msg.text.trim()) log(`[dry-run] вставка: "${msg.text}"`)
+    }
+    log('⚠ Нативный модуль ввода не загружен — реальная вставка невозможна')
+    return
   }
+
+  // Снять зажатые модификаторы (после горячей комбинации) — короткая пауза.
+  await releaseModifiers(mod)
+  await delay(50)
 
   for (let i = 0; i < opts.messages.length; i++) {
     if (opts.shouldAbort?.()) {
@@ -102,12 +109,7 @@ export async function playOtygrovka(opts: PlayOptions): Promise<void> {
     }
     const msg = opts.messages[i]
     if (!msg.text.trim()) continue
-    await delay(msg.delayMs)
-
-    if (!mod) {
-      log(`[dry-run] вставка: "${msg.text}"`)
-      continue
-    }
+    if (msg.delayMs > 0) await delay(msg.delayMs)
 
     try {
       await pasteText(mod, msg.text)
