@@ -3,7 +3,7 @@
     {
       "id": "medic-ems",
       "name": "Медик / EMS",
-      "author": "RPBINDER",
+      "author": "Binder",
       "description": "Осмотр пострадавшего, реанимация и перевязка ран.",
       "link": "https://rpbinder.com/i/MEDIC001",
       "views": 1240,
@@ -52,7 +52,7 @@
     {
       "id": "police-lspd",
       "name": "Полиция / LSPD",
-      "author": "RPBINDER",
+      "author": "Binder",
       "description": "Задержание, обыск и зачитывание прав.",
       "link": "https://rpbinder.com/i/POLICE01",
       "views": 3580,
@@ -90,7 +90,7 @@
     {
       "id": "mechanic-sto",
       "name": "Механик / СТО",
-      "author": "RPBINDER",
+      "author": "Binder",
       "description": "Диагностика и ремонт автомобиля.",
       "link": "https://rpbinder.com/i/MECH0001",
       "views": 890,

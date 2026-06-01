@@ -17,7 +17,7 @@ import {
 export function TitleBar(): JSX.Element {
   return (
     <div className="titlebar">
-      <span className="title">RPBINDER</span>
+      <span className="title">Binder</span>
       <div className="win-controls">
         <button className="win-btn" onClick={() => window.api.windowMinimize()}>
           <Minimize size={14} />

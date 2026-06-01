@@ -68,7 +68,7 @@ export function SettingsPage(): JSX.Element {
         <div className="toggle-row">
           <div className="text">
             <div className="t">Запуск вместе с системой</div>
-            <div className="d">Запускать RPBINDER автоматически при входе в Windows.</div>
+            <div className="d">Запускать Binder автоматически при входе в Windows.</div>
           </div>
           <Toggle on={settings.autoLaunch} onChange={(v) => updateSettings({ autoLaunch: v })} />
         </div>
@@ -106,7 +106,7 @@ export function SettingsPage(): JSX.Element {
         </div>
 
         <div className="empty" style={{ paddingTop: 24 }}>
-          RPBINDER v{appVersion || '0.1.0'}
+          Binder v{appVersion || '0.1.1'}
         </div>
       </div>
     </>

@@ -1,5 +1,5 @@
-appId: com.rpbinder.app
-productName: RPBINDER
+appId: com.binder.app
+productName: Binder
 directories:
   buildResources: build
   output: dist

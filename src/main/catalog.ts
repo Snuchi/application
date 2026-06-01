@@ -17,7 +17,7 @@ const FALLBACK: CatalogItem[] = [
   {
     id: 'demo-medic',
     name: 'Медик / EMS',
-    author: 'RPBINDER',
+    author: 'Binder',
     description: 'Осмотр, реанимация, перевязка.',
     link: 'https://rpbinder.com/i/MEDIC001',
     views: 1240,

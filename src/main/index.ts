@@ -18,7 +18,7 @@ function createWindow(): void {
     show: false,
     frame: false,
     backgroundColor: '#15161b',
-    title: 'RPBINDER',
+    title: 'Binder',
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false,
@@ -56,7 +56,7 @@ function createTray(): void {
   // Пустая иконка-заглушка (заменяется ассетом при сборке).
   const image = nativeImage.createEmpty()
   tray = new Tray(image)
-  tray.setToolTip('RPBINDER')
+  tray.setToolTip('Binder')
   const menu = Menu.buildFromTemplate([
     { label: 'Открыть', click: () => mainWindow?.show() },
     { label: 'Остановить биндер', click: () => engine.stop() },

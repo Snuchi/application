@@ -1,9 +1,9 @@
 {
-  "name": "rpbinder",
-  "version": "0.1.0",
-  "description": "RPBINDER — десктопный биндер отыгровок для RP-серверов (GTA/SAMP и др.)",
+  "name": "binder",
+  "version": "0.1.1",
+  "description": "Binder — десктопный биндер отыгровок для RP-серверов (GTA/SAMP и др.)",
   "main": "./out/main/index.js",
-  "author": "RPBINDER",
+  "author": "Binder",
   "license": "MIT",
   "private": true,
   "scripts": {
