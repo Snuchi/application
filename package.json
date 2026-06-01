@@ -1,6 +1,6 @@
 {
   "name": "binder",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Binder — десктопный биндер отыгровок для RP-серверов (GTA/SAMP и др.)",
   "main": "./out/main/index.js",
   "author": "Binder",
