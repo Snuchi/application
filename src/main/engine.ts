@@ -89,8 +89,6 @@ class Engine {
 
     try {
       await playOtygrovka({
-        chatKey: profile.chatKey,
-        pasteDelayMs: profile.pasteDelayMs,
         messages: otygrovka.messages,
         // Всегда ручной режим: вставляем текст, Enter пользователь жмёт сам.
         manual: true,

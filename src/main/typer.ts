@@ -37,21 +37,6 @@ function delay(ms: number): Promise<void> {
   return new Promise((r) => setTimeout(r, Math.max(0, ms)))
 }
 
-/** Карта строковых имён клавиш открытия чата -> Key из nut-js. */
-function resolveKey(mod: NutModule, name: string): number | null {
-  const Key = mod.Key as unknown as Record<string, number>
-  const n = name.trim()
-  if (!n) return null
-  if (n.length === 1) {
-    const upper = n.toUpperCase()
-    if (Key[upper] !== undefined) return Key[upper]
-  }
-  if (Key[n] !== undefined) return Key[n]
-  const cap = n.charAt(0).toUpperCase() + n.slice(1).toLowerCase()
-  if (Key[cap] !== undefined) return Key[cap]
-  return null
-}
-
 /** Отпускает все клавиши-модификаторы, которые могли остаться зажатыми. */
 async function releaseModifiers(mod: NutModule): Promise<void> {
   const Key = mod.Key as unknown as Record<string, number>
@@ -77,10 +62,6 @@ async function releaseModifiers(mod: NutModule): Promise<void> {
 }
 
 export interface PlayOptions {
-  /** Клавиша открытия чата ("T"). */
-  chatKey: string
-  /** Глобальная задержка перед вставкой текста, мс. */
-  pasteDelayMs: number
   messages: { text: string; delayMs: number }[]
   /** Если true — не нажимать Enter автоматически (пользователь жмёт сам). */
   manual?: boolean
@@ -88,23 +69,27 @@ export interface PlayOptions {
   shouldAbort?: () => boolean
 }
 
-/** Вставляет текст в чат через буфер обмена (Ctrl+V). */
+/** Вставляет текст через буфер обмена (Ctrl+V), сохраняя и восстанавливая старый буфер. */
 async function pasteText(mod: NutModule, text: string): Promise<void> {
+  const prev = clipboard.readText()
   clipboard.writeText(text)
-  await delay(20)
+  await delay(30)
   await mod.keyboard.pressKey(mod.Key.LeftControl, mod.Key.V)
   await mod.keyboard.releaseKey(mod.Key.V, mod.Key.LeftControl)
+  // Вернуть прежний буфер обмена через короткую паузу (чтобы вставка успела).
+  await delay(80)
+  clipboard.writeText(prev)
 }
 
 /**
- * Проигрывает бинд: открывает чат, вставляет текст. Enter — на усмотрение режима.
+ * Вставляет заготовленный текст в активное поле ввода (мессенджер, документ и т.п.).
+ * Чат-клавишу НЕ нажимает — текст идёт туда, где стоит курсор.
  */
 export async function playOtygrovka(opts: PlayOptions): Promise<void> {
   const log = opts.log ?? (() => {})
   const mod = await loadNut()
 
-  // Дать пользователю отпустить горячую комбинацию и снять модификаторы,
-  // чтобы ввод не превратился в Alt+буква и не дёргал окна.
+  // Снять модификаторы (Alt/Ctrl/Shift) после горячей комбинации и дать ей отжаться.
   if (mod) {
     await releaseModifiers(mod)
     await delay(120)
@@ -120,22 +105,12 @@ export async function playOtygrovka(opts: PlayOptions): Promise<void> {
     await delay(msg.delayMs)
 
     if (!mod) {
-      log(`[dry-run] ${opts.chatKey} → "${msg.text}"`)
+      log(`[dry-run] вставка: "${msg.text}"`)
       continue
     }
 
-    const chatKey = resolveKey(mod, opts.chatKey)
     try {
-      // 1. Открыть чат.
-      if (chatKey != null) {
-        await mod.keyboard.pressKey(chatKey)
-        await mod.keyboard.releaseKey(chatKey)
-      }
-      // 2. Дождаться, пока чат откроется.
-      await delay(opts.pasteDelayMs)
-      // 3. Вставить текст из буфера обмена.
       await pasteText(mod, msg.text)
-      // 4. Отправить, только если не ручной режим.
       if (!opts.manual) {
         await mod.keyboard.pressKey(mod.Key.Enter)
         await mod.keyboard.releaseKey(mod.Key.Enter)
