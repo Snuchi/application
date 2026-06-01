@@ -1,13 +1,13 @@
-import { BrowserWindow } from 'electron'
+import { BrowserWindow, globalShortcut } from 'electron'
 import { EngineState, Otygrovka, Profile } from '../shared/types'
 import { IPC } from '../shared/ipc'
-import { hotkeys } from './hotkeys'
 import { inputReady, playOtygrovka } from './typer'
 import { db } from './store'
 
 /**
- * Движок отыгровок. Держит активный профиль, регистрирует его хоткеи
- * и проигрывает отыгровки. Шлёт состояние и логи в renderer.
+ * Движок биндов. Регистрирует глобальные горячие клавиши активного профиля
+ * через Electron globalShortcut (перехватывает комбинацию у системы, поэтому
+ * клавиша-триггер не «протекает» в активное поле ввода) и вставляет текст.
  */
 class Engine {
   private state: EngineState = {
@@ -20,7 +20,6 @@ class Engine {
 
   private broadcast(channel: string, payload: unknown): void {
     for (const win of BrowserWindow.getAllWindows()) {
-      // Окно/контент могли быть уничтожены во время асинхронного проигрывания.
       if (win.isDestroyed() || win.webContents.isDestroyed()) continue
       try {
         win.webContents.send(channel, payload)
@@ -42,21 +41,25 @@ class Engine {
     return this.state
   }
 
-  /** Запускает профиль: вешает его хоткеи на проигрывание отыгровок. */
+  /** Преобразует сохранённую комбинацию в формат акселератора Electron. */
+  private toAccelerator(combo: string): string {
+    return combo
+      .split('+')
+      .map((p) => (p === 'Meta' ? 'Super' : p))
+      .join('+')
+  }
+
+  /** Запускает профиль: регистрирует его горячие клавиши. */
   async start(profileId: string): Promise<EngineState> {
     const profile = db.getProfile(profileId)
     if (!profile) return this.state
 
-    await hotkeys.start()
-    this.bindProfile(profile)
+    const { ok, total } = this.registerShortcuts(profile)
 
     this.state = { running: true, activeProfileId: profileId, playingOtygrovkaId: null }
     this.emitState()
     this.log(`▶ Профиль «${profile.name}» запущен`)
-
-    // Диагностика: доступен ли нативный ввод и сколько хоткеев привязано.
-    const bound = profile.otygrovki.filter((o) => o.hotkey).length
-    this.log(`• Привязано хоткеев: ${bound}, хук клавиш: ${hotkeys.isNativeAvailable ? 'есть' : 'нет'}`)
+    this.log(`• Привязано хоткеев: ${ok}/${total}`)
     void inputReady().then((ready) =>
       this.log(`• Движок ввода: ${ready ? 'нативный (готов)' : 'dry-run (модуль не загружен)'}`)
     )
@@ -64,7 +67,7 @@ class Engine {
   }
 
   stop(): EngineState {
-    hotkeys.setBindings([])
+    globalShortcut.unregisterAll()
     this.abort = true
     this.state = { running: false, activeProfileId: null, playingOtygrovkaId: null }
     this.emitState()
@@ -72,17 +75,25 @@ class Engine {
     return this.state
   }
 
-  private bindProfile(profile: Profile): void {
-    const bindings = profile.otygrovki
-      .filter((o) => o.hotkey)
-      .map((o) => ({
-        combo: o.hotkey,
-        handler: () => void this.play(profile, o)
-      }))
-    hotkeys.setBindings(bindings)
+  /** Регистрирует горячие клавиши профиля. Возвращает счётчик успешных привязок. */
+  private registerShortcuts(profile: Profile): { ok: number; total: number } {
+    globalShortcut.unregisterAll()
+    const withKeys = profile.otygrovki.filter((o) => o.hotkey)
+    let ok = 0
+    for (const o of withKeys) {
+      const accel = this.toAccelerator(o.hotkey)
+      try {
+        const registered = globalShortcut.register(accel, () => void this.play(profile, o))
+        if (registered) ok++
+        else this.log(`⚠ Не удалось привязать «${o.hotkey}» — возможно, занята другой программой`)
+      } catch {
+        this.log(`⚠ Неверная комбинация «${o.hotkey}»`)
+      }
+    }
+    return { ok, total: withKeys.length }
   }
 
-  /** Проигрывает конкретную отыгровку. */
+  /** Проигрывает конкретный бинд. */
   async play(profile: Profile, otygrovka: Otygrovka): Promise<void> {
     if (this.playing) {
       this.log('⚠ Уже идёт воспроизведение, пропуск')
@@ -92,7 +103,7 @@ class Engine {
     this.abort = false
     this.state = { ...this.state, playingOtygrovkaId: otygrovka.id }
     this.emitState()
-    this.log(`⏵ Отыгровка «${otygrovka.name}»`)
+    this.log(`⏵ Бинд «${otygrovka.name}»`)
 
     try {
       await playOtygrovka({
@@ -109,7 +120,7 @@ class Engine {
     }
   }
 
-  /** Ручной запуск отыгровки по id (из UI, кнопка теста). */
+  /** Ручной запуск бинда по id (из UI). */
   async playById(profileId: string, otygrovkaId: string): Promise<void> {
     const profile = db.getProfile(profileId)
     const otygrovka = profile?.otygrovki.find((o) => o.id === otygrovkaId)
