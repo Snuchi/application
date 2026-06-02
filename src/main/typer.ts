@@ -9,6 +9,7 @@
  * от раскладки.
  */
 import { app, clipboard } from 'electron'
+import { existsSync } from 'fs'
 import { join } from 'path'
 
 interface AvnInput {
@@ -21,18 +22,29 @@ interface AvnInput {
 // require доступен в CJS-бандле main (electron-vite). Объявляем для типов.
 declare const require: NodeRequire
 
+/** Диагностика загрузки нативного модуля — выводится в журнал. */
+export let nativeDiag = ''
+
 /** Загружает нативный модуль ввода по абсолютному пути. */
 function loadNative(): AvnInput | null {
-  try {
-    const base = app.isPackaged
-      ? process.resourcesPath
-      : join(app.getAppPath(), 'native', 'build', 'Release')
-    const file = join(base, 'avn_input.node')
-    return require(file) as AvnInput
-  } catch (err) {
-    console.warn('[typer] нативный модуль avn-input не загружен:', (err as Error).message)
-    return null
+  const candidates = [
+    join(process.resourcesPath, 'avn_input.node'),
+    join(app.getAppPath(), 'native', 'build', 'Release', 'avn_input.node'),
+    join(process.resourcesPath, 'app.asar.unpacked', 'native', 'build', 'Release', 'avn_input.node')
+  ]
+  for (const file of candidates) {
+    if (!existsSync(file)) continue
+    try {
+      const mod = require(file) as AvnInput
+      nativeDiag = `загружен: ${file}`
+      return mod
+    } catch (err) {
+      nativeDiag = `ошибка загрузки ${file}: ${(err as Error).message}`
+      return null
+    }
   }
+  nativeDiag = `файл не найден. resourcesPath=${process.resourcesPath}`
+  return null
 }
 
 const nativeInput: AvnInput | null = loadNative()

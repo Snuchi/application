@@ -2,7 +2,7 @@ import { BrowserWindow, globalShortcut } from 'electron'
 import { EngineState, Otygrovka, Profile } from '../shared/types'
 import { IPC } from '../shared/ipc'
 import { hotkeys } from './hotkeys'
-import { inputBackend, playOtygrovka, warmup } from './typer'
+import { inputBackend, nativeDiag, playOtygrovka, warmup } from './typer'
 import { overlay } from './overlay'
 import { db } from './store'
 
@@ -74,6 +74,7 @@ class Engine {
       const label =
         b === 'native' ? 'нативный SendInput (готов)' : b === 'nut' ? 'nut-js (запасной)' : 'НЕ загружен'
       this.log(`• Движок ввода: ${label}`)
+      this.log(`• native: ${nativeDiag}`)
     })
     return this.state
   }

@@ -88,14 +88,6 @@ export function SettingsPage(): JSX.Element {
           <Toggle on={settings.autoLaunch} onChange={(v) => updateSettings({ autoLaunch: v })} />
         </div>
 
-        <div className="toggle-row">
-          <div className="text">
-            <div className="t">{t('settings.tray')}</div>
-            <div className="d">{t('settings.trayDesc')}</div>
-          </div>
-          <Toggle on={settings.minimizeToTray} onChange={(v) => updateSettings({ minimizeToTray: v })} />
-        </div>
-
         {/* Обновления — кнопка по центру */}
         <div className="divider" />
         <div className="update-block">

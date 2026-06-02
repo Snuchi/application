@@ -36,14 +36,6 @@ function createWindow(): void {
     return { action: 'deny' }
   })
 
-  // Сворачивание в трей вместо закрытия.
-  mainWindow.on('close', (e) => {
-    if (db.getSettings().minimizeToTray && !isQuitting) {
-      e.preventDefault()
-      mainWindow?.hide()
-    }
-  })
-
   if (process.env['ELECTRON_RENDERER_URL']) {
     mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
   } else {
