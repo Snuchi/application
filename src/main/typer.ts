@@ -53,25 +53,24 @@ function delay(ms: number): Promise<void> {
 }
 
 /**
- * Отпускает модификаторы и гасит активацию системного меню (Alt/Win).
- * Приём «menu mask»: удерживаем Ctrl, пока отпускаем Alt — тогда лишний Alt-up
- * не открывает верхнее меню приложения (как в Word/Блокноте).
+ * Готовит чистое состояние клавиатуры для вставки:
+ *  - «маскирует» Alt нажатием Ctrl (пока Alt ещё зажат), чтобы Windows не
+ *    активировала верхнее меню при отпускании Alt;
+ *  - отпускает зажатые модификаторы, чтобы Ctrl+V не превратился в Ctrl+Alt+V.
+ * Между шагами небольшие паузы — иначе быстрые события «склеиваются».
  */
-async function releaseModifiersMasked(mod: NutModule): Promise<void> {
+async function neutralizeModifiers(mod: NutModule): Promise<void> {
   const K = mod.Key
   try {
+    // 1. Пометить Alt как «использованный» (нажатие Ctrl при зажатом Alt).
     await mod.keyboard.pressKey(K.LeftControl)
-    // Ctrl держим, отпускаем Alt/Shift/Win, и только в конце сам Ctrl.
-    await mod.keyboard.releaseKey(
-      K.LeftAlt,
-      K.RightAlt,
-      K.LeftShift,
-      K.RightShift,
-      K.LeftSuper,
-      K.RightSuper,
-      K.RightControl,
-      K.LeftControl
-    )
+    await delay(10)
+    // 2. Отпустить Alt/Shift/Win, удерживая Ctrl-маску.
+    await mod.keyboard.releaseKey(K.LeftAlt, K.RightAlt, K.LeftShift, K.RightShift, K.LeftSuper, K.RightSuper)
+    await delay(10)
+    // 3. Отпустить саму Ctrl-маску.
+    await mod.keyboard.releaseKey(K.LeftControl, K.RightControl)
+    await delay(10)
   } catch {
     /* клавиши не были зажаты — ок */
   }
@@ -88,9 +87,9 @@ export interface PlayOptions {
 /** Вставляет текст через буфер обмена (Ctrl+V). Не зависит от раскладки. */
 async function pasteText(mod: NutModule, text: string): Promise<void> {
   clipboard.writeText(text)
-  await delay(8)
+  await delay(10)
   await mod.keyboard.pressKey(mod.Key.LeftControl, mod.Key.V)
-  await delay(5)
+  await delay(8)
   await mod.keyboard.releaseKey(mod.Key.V, mod.Key.LeftControl)
 }
 
@@ -109,9 +108,8 @@ export async function playOtygrovka(opts: PlayOptions): Promise<void> {
     return
   }
 
-  // Снять зажатые модификаторы и погасить меню Alt — минимальная пауза.
-  await releaseModifiersMasked(mod)
-  await delay(10)
+  const t0 = Date.now()
+  await neutralizeModifiers(mod)
 
   for (let i = 0; i < opts.messages.length; i++) {
     if (opts.shouldAbort?.()) {
@@ -128,7 +126,7 @@ export async function playOtygrovka(opts: PlayOptions): Promise<void> {
         await mod.keyboard.pressKey(mod.Key.Enter)
         await mod.keyboard.releaseKey(mod.Key.Enter)
       }
-      log(`✓ Вставлено: "${msg.text}"`)
+      log(`✓ Вставлено за ${Date.now() - t0} мс: "${msg.text}"`)
     } catch (err) {
       log(`✗ Ошибка ввода: ${(err as Error).message}`)
     }

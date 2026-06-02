@@ -56,7 +56,11 @@ class Engine {
     if (!profile) return this.state
 
     const { ok, total } = this.registerShortcuts(profile)
-    overlay.start(profile)
+    try {
+      overlay.start(profile)
+    } catch (err) {
+      this.log(`⚠ Оверлей не запустился: ${(err as Error).message}`)
+    }
     void warmup()
 
     this.state = { running: true, activeProfileId: profileId, playingOtygrovkaId: null }

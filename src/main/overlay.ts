@@ -44,6 +44,7 @@ function createWindow(): BrowserWindow {
     y: workArea.y + 16,
     frame: false,
     transparent: true,
+    backgroundColor: '#00000000',
     resizable: false,
     movable: false,
     minimizable: false,
