@@ -10,7 +10,6 @@ export function ProfileEditorPage(): JSX.Element {
     nav,
     profiles,
     engine,
-    logs,
     go,
     updateProfile,
     deleteProfile,
@@ -142,20 +141,6 @@ export function ProfileEditorPage(): JSX.Element {
         >
           {t('profile.delete')}
         </button>
-
-        {/* Лог проигрывания */}
-        {isRunning && logs.length > 0 && (
-          <>
-            <div className="section-label">{t('profile.log')}</div>
-            <div className="log">
-              {logs.map((l, i) => (
-                <div key={i}>
-                  {new Date(l.time).toLocaleTimeString()} {l.line}
-                </div>
-              ))}
-            </div>
-          </>
-        )}
       </div>
     </>
   )
