@@ -4,7 +4,13 @@
   "description": "Нативный ввод через Windows SendInput для AVN Binder",
   "main": "index.js",
   "gypfile": true,
+  "scripts": {
+    "build": "node-gyp rebuild"
+  },
   "dependencies": {
     "node-addon-api": "^7.1.0"
+  },
+  "devDependencies": {
+    "node-gyp": "^10.1.0"
   }
 }

@@ -8,8 +8,34 @@
  * Текст вставляется через буфер обмена (Ctrl+V) — мгновенно и без зависимости
  * от раскладки.
  */
-import { clipboard } from 'electron'
-import nativeInput from 'avn-input'
+import { app, clipboard } from 'electron'
+import { join } from 'path'
+
+interface AvnInput {
+  keyDown(vk: number): void
+  keyUp(vk: number): void
+  isAdmin(): boolean
+  available(): boolean
+}
+
+// require доступен в CJS-бандле main (electron-vite). Объявляем для типов.
+declare const require: NodeRequire
+
+/** Загружает нативный модуль ввода по абсолютному пути. */
+function loadNative(): AvnInput | null {
+  try {
+    const base = app.isPackaged
+      ? process.resourcesPath
+      : join(app.getAppPath(), 'native', 'build', 'Release')
+    const file = join(base, 'avn_input.node')
+    return require(file) as AvnInput
+  } catch (err) {
+    console.warn('[typer] нативный модуль avn-input не загружен:', (err as Error).message)
+    return null
+  }
+}
+
+const nativeInput: AvnInput | null = loadNative()
 
 // Виртуальные коды клавиш Windows.
 const VK = { CTRL: 17, ALT: 18, V: 86, ENTER: 13 }

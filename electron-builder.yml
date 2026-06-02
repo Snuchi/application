@@ -11,9 +11,11 @@ files:
   - '!{.git,.github}'
 asarUnpack:
   - '**/*.node'
-  - node_modules/avn-input/**
   - node_modules/uiohook-napi/**
   - node_modules/@nut-tree-fork/**
+extraResources:
+  - from: native/build/Release/avn_input.node
+    to: avn_input.node
 win:
   target:
     - nsis

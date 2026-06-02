@@ -1,6 +1,6 @@
 {
   "name": "binder",
-  "version": "0.1.15",
+  "version": "0.1.16",
   "description": "Binder — десктопный биндер отыгровок для RP-серверов (GTA/SAMP и др.)",
   "main": "./out/main/index.js",
   "author": "Binder",
@@ -10,8 +10,9 @@
     "dev": "electron-vite dev",
     "start": "electron-vite preview",
     "build": "electron-vite build",
-    "build:win": "electron-vite build && electron-builder --win",
-    "release": "electron-vite build && electron-builder --win --publish always",
+    "build:native": "npm --prefix native install --no-audit --no-fund && npm --prefix native run build",
+    "build:win": "npm run build:native && electron-vite build && electron-builder --win",
+    "release": "npm run build:native && electron-vite build && electron-builder --win --publish always",
     "build:unpack": "electron-vite build && electron-builder --dir",
     "typecheck:node": "tsc --noEmit -p tsconfig.node.json --composite false",
     "typecheck:web": "tsc --noEmit -p tsconfig.web.json --composite false",
@@ -20,7 +21,6 @@
     "format": "prettier --write ."
   },
   "dependencies": {
-    "avn-input": "file:native",
     "electron-store": "^8.2.0",
     "electron-updater": "^6.3.9",
     "nanoid": "^3.3.7"
