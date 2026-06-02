@@ -20,7 +20,8 @@ async function loadNut(): Promise<NutModule | null> {
   nutReady = true
   try {
     nut = (await import('@nut-tree-fork/nut-js')) as NutModule
-    nut.keyboard.config.autoDelayMs = 2
+    // Минимальная задержка между действиями — для максимальной скорости.
+    nut.keyboard.config.autoDelayMs = 0
     return nut
   } catch (err) {
     console.warn('[typer] нативный модуль ввода недоступен, режим dry-run:', (err as Error).message)
@@ -40,27 +41,22 @@ function delay(ms: number): Promise<void> {
   return new Promise((r) => setTimeout(r, Math.max(0, ms)))
 }
 
-/** Отпускает все клавиши-модификаторы, которые могли остаться зажатыми. */
+/** Отпускает модификаторы (Alt/Ctrl/Shift/Super) одним вызовом — быстро. */
 async function releaseModifiers(mod: NutModule): Promise<void> {
-  const Key = mod.Key as unknown as Record<string, number>
-  const names = [
-    'LeftAlt',
-    'RightAlt',
-    'LeftControl',
-    'RightControl',
-    'LeftShift',
-    'RightShift',
-    'LeftSuper',
-    'RightSuper'
-  ]
-  for (const name of names) {
-    const code = Key[name]
-    if (code === undefined) continue
-    try {
-      await mod.keyboard.releaseKey(code)
-    } catch {
-      /* клавиша не была зажата — ок */
-    }
+  const K = mod.Key
+  try {
+    await mod.keyboard.releaseKey(
+      K.LeftAlt,
+      K.RightAlt,
+      K.LeftControl,
+      K.RightControl,
+      K.LeftShift,
+      K.RightShift,
+      K.LeftSuper,
+      K.RightSuper
+    )
+  } catch {
+    /* клавиши не были зажаты — ок */
   }
 }
 
@@ -72,15 +68,13 @@ export interface PlayOptions {
   shouldAbort?: () => boolean
 }
 
-/** Вставляет текст через буфер обмена (Ctrl+V). Буфер НЕ восстанавливается — иначе гонка. */
+/** Вставляет текст через буфер обмена (Ctrl+V). Не зависит от раскладки. */
 async function pasteText(mod: NutModule, text: string): Promise<void> {
   clipboard.writeText(text)
-  await delay(25)
-  // Явно по одной клавише, чтобы вставка точно сработала.
-  await mod.keyboard.pressKey(mod.Key.LeftControl)
-  await mod.keyboard.pressKey(mod.Key.V)
-  await mod.keyboard.releaseKey(mod.Key.V)
-  await mod.keyboard.releaseKey(mod.Key.LeftControl)
+  await delay(8)
+  await mod.keyboard.pressKey(mod.Key.LeftControl, mod.Key.V)
+  await delay(5)
+  await mod.keyboard.releaseKey(mod.Key.V, mod.Key.LeftControl)
 }
 
 /**
@@ -98,9 +92,9 @@ export async function playOtygrovka(opts: PlayOptions): Promise<void> {
     return
   }
 
-  // Снять зажатые модификаторы (после горячей комбинации) — короткая пауза.
+  // Снять зажатые модификаторы (после горячей комбинации) — минимальная пауза.
   await releaseModifiers(mod)
-  await delay(50)
+  await delay(12)
 
   for (let i = 0; i < opts.messages.length; i++) {
     if (opts.shouldAbort?.()) {
