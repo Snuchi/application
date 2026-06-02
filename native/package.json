@@ -1,0 +1,10 @@
+{
+  "name": "avn-input",
+  "version": "1.0.0",
+  "description": "Нативный ввод через Windows SendInput для AVN Binder",
+  "main": "index.js",
+  "gypfile": true,
+  "dependencies": {
+    "node-addon-api": "^7.1.0"
+  }
+}

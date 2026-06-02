@@ -1,0 +1,1 @@
+cmd_Release/obj.target/avn_input.node := g++ -o Release/obj.target/avn_input.node -shared -pthread -rdynamic -m64  -Wl,-soname=avn_input.node -Wl,--start-group Release/obj.target/avn_input/src/input.o -Wl,--end-group 

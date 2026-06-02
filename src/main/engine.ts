@@ -2,7 +2,7 @@ import { BrowserWindow, globalShortcut } from 'electron'
 import { EngineState, Otygrovka, Profile } from '../shared/types'
 import { IPC } from '../shared/ipc'
 import { hotkeys } from './hotkeys'
-import { inputReady, playOtygrovka, warmup } from './typer'
+import { inputBackend, playOtygrovka, warmup } from './typer'
 import { overlay } from './overlay'
 import { db } from './store'
 
@@ -70,9 +70,11 @@ class Engine {
     this.emitState()
     this.log(`▶ Профиль «${profile.name}» запущен`)
     this.log(`• Привязано хоткеев: ${ok}/${total}`)
-    void inputReady().then((ready) =>
-      this.log(`• Движок ввода: ${ready ? 'нативный (готов)' : 'dry-run (модуль не загружен)'}`)
-    )
+    void inputBackend().then((b) => {
+      const label =
+        b === 'native' ? 'нативный SendInput (готов)' : b === 'nut' ? 'nut-js (запасной)' : 'НЕ загружен'
+      this.log(`• Движок ввода: ${label}`)
+    })
     return this.state
   }
 

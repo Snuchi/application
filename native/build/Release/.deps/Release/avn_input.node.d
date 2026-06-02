@@ -1,0 +1,1 @@
+cmd_Release/avn_input.node := ln -f "Release/obj.target/avn_input.node" "Release/avn_input.node" 2>/dev/null || (rm -rf "Release/avn_input.node" && cp -af "Release/obj.target/avn_input.node" "Release/avn_input.node")

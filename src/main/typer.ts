@@ -1,22 +1,28 @@
 /**
- * Эмуляция клавиатурного ввода в активное поле ввода.
+ * Ввод текста в активное поле.
  *
- * Использует @nut-tree-fork/nut-js (опциональная нативная зависимость).
- * Если модуль не установлен/не собрался — работает в режиме "dry-run".
+ * Основной способ — собственный нативный модуль avn-input (Windows SendInput),
+ * как в проверенных биндерах: надёжно и быстро. Если он недоступен (например,
+ * при разработке на Linux) — пробуем nut-js, иначе режим dry-run (только лог).
  *
  * Текст вставляется через буфер обмена (Ctrl+V) — мгновенно и без зависимости
- * от раскладки. Перед вставкой отпускаются модификаторы (Alt/Ctrl/Shift),
- * которые ещё могут быть зажаты после горячей комбинации.
+ * от раскладки.
  */
 import { clipboard } from 'electron'
+import nativeInput from 'avn-input'
 
+// Виртуальные коды клавиш Windows.
+const VK = { CTRL: 17, ALT: 18, V: 86, ENTER: 13 }
+
+export type LogFn = (line: string) => void
+
+function delay(ms: number): Promise<void> {
+  return new Promise((r) => setTimeout(r, Math.max(0, ms)))
+}
+
+// ---- Запасной бэкенд nut-js (для не-Windows разработки) ----
 type NutModule = typeof import('@nut-tree-fork/nut-js')
-
-// Кэшируем сам ПРОМИС загрузки — иначе при одновременных вызовах второй
-// получал ещё не загруженный модуль (null) и уходил в dry-run.
 let nutPromise: Promise<NutModule | null> | null = null
-let warmed = false
-
 function loadNut(): Promise<NutModule | null> {
   if (!nutPromise) {
     nutPromise = (async () => {
@@ -24,8 +30,7 @@ function loadNut(): Promise<NutModule | null> {
         const mod = (await import('@nut-tree-fork/nut-js')) as NutModule
         mod.keyboard.config.autoDelayMs = 0
         return mod
-      } catch (err) {
-        console.warn('[typer] нативный модуль ввода недоступен:', (err as Error).message)
+      } catch {
         return null
       }
     })()
@@ -33,67 +38,58 @@ function loadNut(): Promise<NutModule | null> {
   return nutPromise
 }
 
-export type LogFn = (line: string) => void
+const nativeAvailable = !!(nativeInput && nativeInput.available && nativeInput.available())
 
-/** Готов ли нативный ввод. Для диагностики в журнале. */
+/** Готов ли реальный ввод (нативный модуль). */
 export async function inputReady(): Promise<boolean> {
+  if (nativeAvailable) return true
   return (await loadNut()) != null
 }
 
-/** Прогрев нативного провайдера ввода, чтобы первое срабатывание не тормозило. */
+/** Какой бэкенд ввода активен — для диагностики. */
+export async function inputBackend(): Promise<'native' | 'nut' | 'none'> {
+  if (nativeAvailable) return 'native'
+  return (await loadNut()) ? 'nut' : 'none'
+}
+
+/** Запущено ли приложение от имени администратора. */
+export function isAdmin(): boolean {
+  return nativeAvailable && !!nativeInput && nativeInput.isAdmin()
+}
+
 export async function warmup(): Promise<void> {
-  if (warmed) return
-  const mod = await loadNut()
-  if (!mod) return
-  try {
-    // Реальное действие, чтобы инициализировать нативный провайдер заранее.
-    await mod.keyboard.pressKey(mod.Key.LeftControl)
-    await mod.keyboard.releaseKey(mod.Key.LeftControl)
-    warmed = true
-  } catch {
-    /* ничего */
-  }
-}
-
-function delay(ms: number): Promise<void> {
-  return new Promise((r) => setTimeout(r, Math.max(0, ms)))
-}
-
-/** Отпускает все модификаторы (на всякий случай — обычно они уже отпущены). */
-async function releaseAllModifiers(mod: NutModule): Promise<void> {
-  const K = mod.Key
-  try {
-    await mod.keyboard.releaseKey(
-      K.LeftAlt,
-      K.RightAlt,
-      K.LeftShift,
-      K.RightShift,
-      K.LeftSuper,
-      K.RightSuper,
-      K.LeftControl,
-      K.RightControl
-    )
-  } catch {
-    /* уже отпущены — ок */
-  }
+  if (!nativeAvailable) await loadNut()
 }
 
 export interface PlayOptions {
   messages: { text: string; delayMs: number }[]
   /** Если true — не нажимать Enter автоматически (пользователь жмёт сам). */
   manual?: boolean
-  /** Если true — снять фокус с меню приложения (для Alt-комбинаций в Word/Блокноте). */
+  /** Снять фокус со строки меню приложения (для Alt-комбинаций в Word/Блокноте). */
   releaseMenuFocus?: boolean
   log?: LogFn
   shouldAbort?: () => boolean
 }
 
-/** Вставляет текст через буфер обмена (Ctrl+V). Не зависит от раскладки. */
-async function pasteText(mod: NutModule, text: string): Promise<void> {
+/** Вставка через нативный SendInput: clipboard + Ctrl+V. */
+async function pasteNative(text: string): Promise<void> {
+  const a = nativeInput!
   clipboard.writeText(text)
-  await delay(10)
+  await delay(90) // дать буферу обмена «осесть» (как в проверенных биндерах)
+  a.keyDown(VK.CTRL)
+  a.keyDown(VK.V)
+  await delay(30)
+  a.keyUp(VK.V)
+  a.keyUp(VK.CTRL)
+  await delay(15)
+}
+
+/** Вставка через nut-js (запасной путь). */
+async function pasteNut(mod: NutModule, text: string): Promise<void> {
+  clipboard.writeText(text)
+  await delay(90)
   await mod.keyboard.pressKey(mod.Key.LeftControl, mod.Key.V)
-  await delay(8)
+  await delay(30)
   await mod.keyboard.releaseKey(mod.Key.V, mod.Key.LeftControl)
 }
 
@@ -102,9 +98,9 @@ async function pasteText(mod: NutModule, text: string): Promise<void> {
  */
 export async function playOtygrovka(opts: PlayOptions): Promise<void> {
   const log = opts.log ?? (() => {})
-  const mod = await loadNut()
+  const mod = nativeAvailable ? null : await loadNut()
 
-  if (!mod) {
+  if (!nativeAvailable && !mod) {
     for (const msg of opts.messages) {
       if (msg.text.trim()) log(`[dry-run] вставка: "${msg.text}"`)
     }
@@ -113,19 +109,18 @@ export async function playOtygrovka(opts: PlayOptions): Promise<void> {
   }
 
   const t0 = Date.now()
-  // Модификаторы к этому моменту уже отпущены (движок ждёт этого). На всякий случай.
-  await releaseAllModifiers(mod)
 
-  // Если бинд на Alt — снимаем возможный фокус со строки меню (Word/Блокнот):
-  // одиночное нажатие Alt возвращает фокус из меню в документ.
-  if (opts.releaseMenuFocus) {
-    try {
-      await mod.keyboard.pressKey(mod.Key.LeftAlt)
-      await mod.keyboard.releaseKey(mod.Key.LeftAlt)
-      await delay(25)
-    } catch {
-      /* ок */
-    }
+  // Сбросить возможный зажатый Ctrl (после Ctrl-комбинаций).
+  if (nativeAvailable && nativeInput) {
+    nativeInput.keyUp(VK.CTRL)
+  }
+
+  // Для Alt-биндов вернуть фокус из строки меню в документ (Word/Блокнот):
+  // одиночное нажатие Alt закрывает активированное меню.
+  if (opts.releaseMenuFocus && nativeAvailable && nativeInput) {
+    nativeInput.keyDown(VK.ALT)
+    nativeInput.keyUp(VK.ALT)
+    await delay(25)
   }
 
   for (let i = 0; i < opts.messages.length; i++) {
@@ -138,10 +133,18 @@ export async function playOtygrovka(opts: PlayOptions): Promise<void> {
     if (msg.delayMs > 0) await delay(msg.delayMs)
 
     try {
-      await pasteText(mod, msg.text)
-      if (!opts.manual) {
-        await mod.keyboard.pressKey(mod.Key.Enter)
-        await mod.keyboard.releaseKey(mod.Key.Enter)
+      if (nativeAvailable) {
+        await pasteNative(msg.text)
+        if (!opts.manual) {
+          nativeInput!.keyDown(VK.ENTER)
+          nativeInput!.keyUp(VK.ENTER)
+        }
+      } else if (mod) {
+        await pasteNut(mod, msg.text)
+        if (!opts.manual) {
+          await mod.keyboard.pressKey(mod.Key.Enter)
+          await mod.keyboard.releaseKey(mod.Key.Enter)
+        }
       }
       log(`✓ Вставлено за ${Date.now() - t0} мс: "${msg.text}"`)
     } catch (err) {
