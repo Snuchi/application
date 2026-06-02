@@ -45,11 +45,11 @@ export async function warmup(): Promise<void> {
   if (warmed) return
   const mod = await loadNut()
   if (!mod) return
-  warmed = true
   try {
     // Реальное действие, чтобы инициализировать нативный провайдер заранее.
     await mod.keyboard.pressKey(mod.Key.LeftControl)
     await mod.keyboard.releaseKey(mod.Key.LeftControl)
+    warmed = true
   } catch {
     /* ничего */
   }
@@ -59,36 +59,22 @@ function delay(ms: number): Promise<void> {
   return new Promise((r) => setTimeout(r, Math.max(0, ms)))
 }
 
-/**
- * Готовит чистое состояние клавиатуры для вставки:
- *  - «маскирует» Alt нажатием Ctrl (пока Alt ещё зажат), чтобы Windows не
- *    активировала верхнее меню при отпускании Alt;
- *  - отпускает зажатые модификаторы, чтобы Ctrl+V не превратился в Ctrl+Alt+V.
- * Между шагами небольшие паузы — иначе быстрые события «склеиваются».
- */
-async function neutralizeModifiers(mod: NutModule): Promise<void> {
+/** Отпускает все модификаторы (на всякий случай — обычно они уже отпущены). */
+async function releaseAllModifiers(mod: NutModule): Promise<void> {
   const K = mod.Key
-  // Каждый шаг изолирован — чтобы сбой одного не оставил Ctrl зажатым.
   try {
-    // 1. Пометить Alt как «использованный» (нажатие Ctrl при зажатом Alt).
-    await mod.keyboard.pressKey(K.LeftControl)
-    await delay(10)
+    await mod.keyboard.releaseKey(
+      K.LeftAlt,
+      K.RightAlt,
+      K.LeftShift,
+      K.RightShift,
+      K.LeftSuper,
+      K.RightSuper,
+      K.LeftControl,
+      K.RightControl
+    )
   } catch {
-    /* ок */
-  }
-  try {
-    // 2. Отпустить Alt/Shift/Win, удерживая Ctrl-маску.
-    await mod.keyboard.releaseKey(K.LeftAlt, K.RightAlt, K.LeftShift, K.RightShift, K.LeftSuper, K.RightSuper)
-    await delay(10)
-  } catch {
-    /* ок */
-  }
-  try {
-    // 3. Отпустить саму Ctrl-маску.
-    await mod.keyboard.releaseKey(K.LeftControl, K.RightControl)
-    await delay(10)
-  } catch {
-    /* ок */
+    /* уже отпущены — ок */
   }
 }
 
@@ -96,6 +82,8 @@ export interface PlayOptions {
   messages: { text: string; delayMs: number }[]
   /** Если true — не нажимать Enter автоматически (пользователь жмёт сам). */
   manual?: boolean
+  /** Если true — снять фокус с меню приложения (для Alt-комбинаций в Word/Блокноте). */
+  releaseMenuFocus?: boolean
   log?: LogFn
   shouldAbort?: () => boolean
 }
@@ -125,7 +113,20 @@ export async function playOtygrovka(opts: PlayOptions): Promise<void> {
   }
 
   const t0 = Date.now()
-  await neutralizeModifiers(mod)
+  // Модификаторы к этому моменту уже отпущены (движок ждёт этого). На всякий случай.
+  await releaseAllModifiers(mod)
+
+  // Если бинд на Alt — снимаем возможный фокус со строки меню (Word/Блокнот):
+  // одиночное нажатие Alt возвращает фокус из меню в документ.
+  if (opts.releaseMenuFocus) {
+    try {
+      await mod.keyboard.pressKey(mod.Key.LeftAlt)
+      await mod.keyboard.releaseKey(mod.Key.LeftAlt)
+      await delay(25)
+    } catch {
+      /* ок */
+    }
+  }
 
   for (let i = 0; i < opts.messages.length; i++) {
     if (opts.shouldAbort?.()) {

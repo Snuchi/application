@@ -1,6 +1,7 @@
 import { BrowserWindow, globalShortcut } from 'electron'
 import { EngineState, Otygrovka, Profile } from '../shared/types'
 import { IPC } from '../shared/ipc'
+import { hotkeys } from './hotkeys'
 import { inputReady, playOtygrovka, warmup } from './typer'
 import { overlay } from './overlay'
 import { db } from './store'
@@ -56,6 +57,8 @@ class Engine {
     if (!profile) return this.state
 
     const { ok, total } = this.registerShortcuts(profile)
+    // Запускаем низкоуровневый хук — для отслеживания отпускания клавиш.
+    void hotkeys.start()
     try {
       overlay.start(profile)
     } catch (err) {
@@ -137,11 +140,19 @@ class Engine {
     this.emitState()
     this.log(`⏵ Бинд «${otygrovka.name}»`)
 
+    // Ждём, пока пользователь отпустит горячую комбинацию: иначе зажатый Alt
+    // ломает Ctrl+V (становится Ctrl+Alt+V) и открывает меню приложения.
+    if (hotkeys.modifiersDown()) {
+      await hotkeys.waitForModifiersUp(700)
+    }
+
     try {
       await playOtygrovka({
         messages: otygrovka.messages,
         // Всегда ручной режим: вставляем текст, Enter пользователь жмёт сам.
         manual: true,
+        // Для Alt-комбинаций снимаем фокус с меню приложения.
+        releaseMenuFocus: /alt/i.test(otygrovka.hotkey),
         log: (l) => this.log(l),
         shouldAbort: () => this.abort
       })

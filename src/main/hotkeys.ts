@@ -70,11 +70,20 @@ type CaptureHandler = (combo: string) => void
 const handlers = new Map<string, Handler>()
 let captureHandler: CaptureHandler | null = null
 
+/** Сейчас зажатые клавиши-модификаторы (по keycode). */
+const pressedMods = new Set<number>()
+
+function isModifier(keycode: number): boolean {
+  const name = keycodeToName[keycode]
+  return !!name && MODIFIER_NAMES.has(name)
+}
+
 export const hotkeys = {
   async start(): Promise<void> {
     const m = await load()
     if (!m || started) return
     m.uIOhook.on('keydown', (e: KeyEvent) => {
+      if (isModifier(e.keycode)) pressedMods.add(e.keycode)
       const combo = comboFromEvent(e)
       if (!combo) return
       // Режим захвата: перехватываем комбинацию для назначения.
@@ -87,8 +96,33 @@ export const hotkeys = {
       const handler = handlers.get(combo)
       if (handler) handler()
     })
+    m.uIOhook.on('keyup', (e: KeyEvent) => {
+      pressedMods.delete(e.keycode)
+    })
     m.uIOhook.start()
     started = true
+  },
+
+  /** Зажат ли сейчас хотя бы один модификатор (Alt/Ctrl/Shift/Win). */
+  modifiersDown(): boolean {
+    return pressedMods.size > 0
+  },
+
+  /** Ждёт, пока пользователь отпустит все модификаторы (или до таймаута). */
+  waitForModifiersUp(timeoutMs = 600): Promise<void> {
+    return new Promise((resolve) => {
+      if (pressedMods.size === 0) {
+        resolve()
+        return
+      }
+      const start = Date.now()
+      const timer = setInterval(() => {
+        if (pressedMods.size === 0 || Date.now() - start > timeoutMs) {
+          clearInterval(timer)
+          resolve()
+        }
+      }, 12)
+    })
   },
 
   stop(): void {
@@ -102,6 +136,7 @@ export const hotkeys = {
     started = false
     handlers.clear()
     captureHandler = null
+    pressedMods.clear()
   },
 
   /** Перерегистрирует весь набор хоткеев (combo -> callback). */
