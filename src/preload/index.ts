@@ -63,12 +63,19 @@ const api = {
     return () => ipcRenderer.removeListener(IPC.EvtPlaybackLog, h)
   },
   onOverlayData: (
-    cb: (data: { title: string; binds: { name: string; hotkey: string }[] }) => void
+    cb: (data: { title: string; binds: { id: string; name: string; hotkey: string }[] }) => void
   ): (() => void) => {
-    const h = (_e: unknown, data: { title: string; binds: { name: string; hotkey: string }[] }): void =>
-      cb(data)
+    const h = (
+      _e: unknown,
+      data: { title: string; binds: { id: string; name: string; hotkey: string }[] }
+    ): void => cb(data)
     ipcRenderer.on(IPC.EvtOverlayData, h)
     return () => ipcRenderer.removeListener(IPC.EvtOverlayData, h)
+  },
+  onOverlayFlash: (cb: (id: string) => void): (() => void) => {
+    const h = (_e: unknown, id: string): void => cb(id)
+    ipcRenderer.on(IPC.EvtOverlayFlash, h)
+    return () => ipcRenderer.removeListener(IPC.EvtOverlayFlash, h)
   }
 }
 

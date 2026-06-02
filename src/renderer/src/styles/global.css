@@ -710,6 +710,18 @@ select.input option {
   border-radius: 7px;
   padding: 7px 10px;
   margin-bottom: 5px;
+  transition:
+    background 0.12s,
+    box-shadow 0.12s;
+}
+.ov-row.active {
+  background: rgba(232, 185, 35, 0.28);
+  box-shadow: 0 0 0 1px rgba(232, 185, 35, 0.7) inset;
+}
+.ov-row.active .ov-key {
+  background: rgba(232, 185, 35, 0.55);
+  border-color: rgba(232, 185, 35, 0.8);
+  color: #1b1b1d;
 }
 .ov-name {
   flex: 1;

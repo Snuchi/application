@@ -105,19 +105,13 @@ class Engine {
       }
     }
 
-    // Клавиши управления оверлеем из настроек (F4 — вкл/выкл, F6 — скрыть/показать).
+    // Клавиша скрытия/показа оверлея из настроек (F6).
     const settings = db.getSettings()
-    const f4 = this.safeRegister(settings.overlayToggleKey, () => {
-      overlay.toggleEnabled()
-      this.log(`• Оверлей: ${overlay.isShown() ? 'показан' : 'скрыт'}`)
-    })
     const f6 = this.safeRegister(settings.overlayHideKey, () => {
       overlay.toggleVisible()
       this.log(`• Оверлей: ${overlay.isShown() ? 'показан' : 'скрыт'}`)
     })
-    this.log(
-      `• Управление оверлеем: ${settings.overlayToggleKey} ${f4 ? '✓' : '✗'}, ${settings.overlayHideKey} ${f6 ? '✓' : '✗'}`
-    )
+    this.log(`• Скрыть/показать оверлей: ${settings.overlayHideKey} ${f6 ? '✓' : '✗'}`)
 
     return { ok, total: withKeys.length }
   }
@@ -141,6 +135,7 @@ class Engine {
     this.abort = false
     this.state = { ...this.state, playingOtygrovkaId: otygrovka.id }
     this.emitState()
+    overlay.flash(otygrovka.id)
     this.log(`⏵ Бинд «${otygrovka.name}»`)
 
     // Ждём, пока пользователь отпустит горячую комбинацию: иначе зажатый Alt

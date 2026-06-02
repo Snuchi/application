@@ -96,7 +96,23 @@ export function isAdmin(): boolean {
 }
 
 export async function warmup(): Promise<void> {
-  if (!nativeAvailable) await loadNut()
+  // Прогрев буфера обмена (первое обращение бывает медленным).
+  try {
+    clipboard.writeText(clipboard.readText())
+  } catch {
+    /* ничего */
+  }
+  if (nativeAvailable && nativeInput) {
+    // Прогрев нативного ввода безвредным нажатием Ctrl (модификатор без действия).
+    try {
+      nativeInput.keyDown(VK.CTRL)
+      nativeInput.keyUp(VK.CTRL)
+    } catch {
+      /* ничего */
+    }
+  } else {
+    await loadNut()
+  }
 }
 
 export interface PlayOptions {

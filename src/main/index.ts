@@ -1,14 +1,12 @@
-import { app, BrowserWindow, Menu, nativeImage, Tray, shell } from 'electron'
+import { app, BrowserWindow, shell } from 'electron'
 import { join } from 'path'
 import { applyAutoLaunch, registerIpc } from './ipc'
-import { engine } from './engine'
 import { hotkeys } from './hotkeys'
 import { overlay } from './overlay'
 import { db } from './store'
 import { initUpdater } from './updater'
 
 let mainWindow: BrowserWindow | null = null
-let tray: Tray | null = null
 
 function createWindow(): void {
   mainWindow = new BrowserWindow({
@@ -43,29 +41,6 @@ function createWindow(): void {
   }
 }
 
-let isQuitting = false
-
-function createTray(): void {
-  // Пустая иконка-заглушка (заменяется ассетом при сборке).
-  const image = nativeImage.createEmpty()
-  tray = new Tray(image)
-  tray.setToolTip('AVN Binder')
-  const menu = Menu.buildFromTemplate([
-    { label: 'Открыть', click: () => mainWindow?.show() },
-    { label: 'Остановить биндер', click: () => engine.stop() },
-    { type: 'separator' },
-    {
-      label: 'Выход',
-      click: () => {
-        isQuitting = true
-        app.quit()
-      }
-    }
-  ])
-  tray.setContextMenu(menu)
-  tray.on('double-click', () => mainWindow?.show())
-}
-
 // Один экземпляр приложения.
 const gotLock = app.requestSingleInstanceLock()
 if (!gotLock) {
@@ -82,7 +57,6 @@ if (!gotLock) {
   app.whenReady().then(() => {
     registerIpc()
     createWindow()
-    createTray()
     initUpdater()
     applyAutoLaunch(db.getSettings().autoLaunch)
 
@@ -93,11 +67,11 @@ if (!gotLock) {
 }
 
 app.on('before-quit', () => {
-  isQuitting = true
   hotkeys.stop()
   overlay.destroy()
 })
 
+// Закрытие окна полностью закрывает приложение (без сворачивания в трей).
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit()
+  app.quit()
 })

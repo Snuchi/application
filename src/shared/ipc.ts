@@ -37,7 +37,8 @@ export const IPC = {
   EvtHotkeyCaptured: 'evt:hotkey-captured',
   EvtPlaybackLog: 'evt:playback-log',
   EvtUpdate: 'evt:update',
-  EvtOverlayData: 'evt:overlay-data'
+  EvtOverlayData: 'evt:overlay-data',
+  EvtOverlayFlash: 'evt:overlay-flash'
 } as const
 
 export type IpcChannel = (typeof IPC)[keyof typeof IPC]

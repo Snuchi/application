@@ -5,27 +5,27 @@ import { IPC } from '../shared/ipc'
 
 /**
  * Полупрозрачный оверлей со списком биндов и их горячими клавишами.
- * Окно без рамки, поверх всех, клико-прозрачное и не забирает фокус,
- * чтобы вставка по хоткеям продолжала работать.
+ * Окно без рамки, поверх всех, клико-прозрачное и не забирает фокус.
+ * Прячется/показывается клавишей из настроек (F6).
  */
 
 export interface OverlayData {
   title: string
-  binds: { name: string; hotkey: string }[]
+  binds: { id: string; name: string; hotkey: string }[]
 }
 
 let win: BrowserWindow | null = null
 let running = false
-let enabled = true // F4 — вкл/выкл оверлей
 let visible = true // F6 — скрыть/показать
 let lastData: OverlayData = { title: '', binds: [] }
+let lastToggle = 0
 
 function buildData(profile: Profile): OverlayData {
   return {
     title: profile.name,
     binds: profile.otygrovki
       .filter((o) => o.hotkey)
-      .map((o) => ({ name: o.name, hotkey: o.hotkey }))
+      .map((o) => ({ id: o.id, name: o.name, hotkey: o.hotkey }))
   }
 }
 
@@ -79,17 +79,8 @@ function push(): void {
 
 function applyVisibility(): void {
   if (!win || win.isDestroyed()) return
-  if (running && enabled && visible) win.showInactive()
+  if (running && visible) win.showInactive()
   else win.hide()
-}
-
-let lastToggle = 0
-
-function canToggle(): boolean {
-  const now = Date.now()
-  if (now - lastToggle < 300) return false // анти-дребезг (автоповтор клавиши)
-  lastToggle = now
-  return true
 }
 
 export const overlay = {
@@ -110,21 +101,21 @@ export const overlay = {
     running = false
     applyVisibility()
   },
-  /** F4 — включить/выключить оверлей. */
-  toggleEnabled(): void {
-    if (!canToggle()) return
-    enabled = !enabled
-    applyVisibility()
-  },
-  /** F6 — скрыть/показать оверлей. */
+  /** F6 — скрыть/показать оверлей (с анти-дребезгом). */
   toggleVisible(): void {
-    if (!canToggle()) return
+    const now = Date.now()
+    if (now - lastToggle < 300) return
+    lastToggle = now
     visible = !visible
     applyVisibility()
   },
-  /** Показан ли оверлей сейчас. */
+  /** Подсветить сработавший бинд в оверлее. */
+  flash(otygrovkaId: string): void {
+    if (!win || win.isDestroyed()) return
+    win.webContents.send(IPC.EvtOverlayFlash, otygrovkaId)
+  },
   isShown(): boolean {
-    return running && enabled && visible
+    return running && visible
   },
   destroy(): void {
     if (win && !win.isDestroyed()) win.destroy()

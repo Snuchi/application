@@ -60,16 +60,7 @@ export function SettingsPage(): JSX.Element {
           </div>
         </div>
 
-        {/* Горячие клавиши оверлея */}
-        <div className="toggle-row">
-          <div className="text">
-            <div className="t">{t('settings.overlayToggle')}</div>
-          </div>
-          <HotkeyField
-            value={settings.overlayToggleKey}
-            onChange={(combo) => updateSettings({ overlayToggleKey: combo })}
-          />
-        </div>
+        {/* Горячая клавиша скрытия/показа оверлея */}
         <div className="toggle-row">
           <div className="text">
             <div className="t">{t('settings.overlayHide')}</div>
