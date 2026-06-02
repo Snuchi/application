@@ -1,7 +1,8 @@
 import { BrowserWindow, globalShortcut } from 'electron'
 import { EngineState, Otygrovka, Profile } from '../shared/types'
 import { IPC } from '../shared/ipc'
-import { inputReady, playOtygrovka } from './typer'
+import { inputReady, playOtygrovka, warmup } from './typer'
+import { overlay } from './overlay'
 import { db } from './store'
 
 /**
@@ -55,6 +56,8 @@ class Engine {
     if (!profile) return this.state
 
     const { ok, total } = this.registerShortcuts(profile)
+    overlay.start(profile)
+    void warmup()
 
     this.state = { running: true, activeProfileId: profileId, playingOtygrovkaId: null }
     this.emitState()
@@ -68,6 +71,7 @@ class Engine {
 
   stop(): EngineState {
     globalShortcut.unregisterAll()
+    overlay.stop()
     this.abort = true
     this.state = { running: false, activeProfileId: null, playingOtygrovkaId: null }
     this.emitState()
@@ -75,7 +79,7 @@ class Engine {
     return this.state
   }
 
-  /** Регистрирует горячие клавиши профиля. Возвращает счётчик успешных привязок. */
+  /** Регистрирует горячие клавиши профиля + клавиши управления оверлеем. */
   private registerShortcuts(profile: Profile): { ok: number; total: number } {
     globalShortcut.unregisterAll()
     const withKeys = profile.otygrovki.filter((o) => o.hotkey)
@@ -90,7 +94,22 @@ class Engine {
         this.log(`⚠ Неверная комбинация «${o.hotkey}»`)
       }
     }
+
+    // Клавиши управления оверлеем из настроек (F4 — вкл/выкл, F6 — скрыть/показать).
+    const settings = db.getSettings()
+    this.safeRegister(settings.overlayToggleKey, () => overlay.toggleEnabled())
+    this.safeRegister(settings.overlayHideKey, () => overlay.toggleVisible())
+
     return { ok, total: withKeys.length }
+  }
+
+  private safeRegister(combo: string, handler: () => void): void {
+    if (!combo) return
+    try {
+      globalShortcut.register(this.toAccelerator(combo), handler)
+    } catch {
+      /* неверная комбинация — пропускаем */
+    }
   }
 
   /** Проигрывает конкретный бинд. */

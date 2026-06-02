@@ -37,23 +37,40 @@ export async function inputReady(): Promise<boolean> {
   return (await loadNut()) != null
 }
 
+/** Прогрев нативного провайдера ввода, чтобы первое срабатывание не тормозило. */
+export async function warmup(): Promise<void> {
+  const mod = await loadNut()
+  if (!mod) return
+  try {
+    await mod.keyboard.releaseKey(mod.Key.LeftControl)
+  } catch {
+    /* ничего */
+  }
+}
+
 function delay(ms: number): Promise<void> {
   return new Promise((r) => setTimeout(r, Math.max(0, ms)))
 }
 
-/** Отпускает модификаторы (Alt/Ctrl/Shift/Super) одним вызовом — быстро. */
-async function releaseModifiers(mod: NutModule): Promise<void> {
+/**
+ * Отпускает модификаторы и гасит активацию системного меню (Alt/Win).
+ * Приём «menu mask»: удерживаем Ctrl, пока отпускаем Alt — тогда лишний Alt-up
+ * не открывает верхнее меню приложения (как в Word/Блокноте).
+ */
+async function releaseModifiersMasked(mod: NutModule): Promise<void> {
   const K = mod.Key
   try {
+    await mod.keyboard.pressKey(K.LeftControl)
+    // Ctrl держим, отпускаем Alt/Shift/Win, и только в конце сам Ctrl.
     await mod.keyboard.releaseKey(
       K.LeftAlt,
       K.RightAlt,
-      K.LeftControl,
-      K.RightControl,
       K.LeftShift,
       K.RightShift,
       K.LeftSuper,
-      K.RightSuper
+      K.RightSuper,
+      K.RightControl,
+      K.LeftControl
     )
   } catch {
     /* клавиши не были зажаты — ок */
@@ -92,9 +109,9 @@ export async function playOtygrovka(opts: PlayOptions): Promise<void> {
     return
   }
 
-  // Снять зажатые модификаторы (после горячей комбинации) — минимальная пауза.
-  await releaseModifiers(mod)
-  await delay(12)
+  // Снять зажатые модификаторы и погасить меню Alt — минимальная пауза.
+  await releaseModifiersMasked(mod)
+  await delay(10)
 
   for (let i = 0; i < opts.messages.length; i++) {
     if (opts.shouldAbort?.()) {

@@ -61,6 +61,14 @@ const api = {
     const h = (_e: unknown, entry: { time: number; line: string }): void => cb(entry)
     ipcRenderer.on(IPC.EvtPlaybackLog, h)
     return () => ipcRenderer.removeListener(IPC.EvtPlaybackLog, h)
+  },
+  onOverlayData: (
+    cb: (data: { title: string; binds: { name: string; hotkey: string }[] }) => void
+  ): (() => void) => {
+    const h = (_e: unknown, data: { title: string; binds: { name: string; hotkey: string }[] }): void =>
+      cb(data)
+    ipcRenderer.on(IPC.EvtOverlayData, h)
+    return () => ipcRenderer.removeListener(IPC.EvtOverlayData, h)
   }
 }
 

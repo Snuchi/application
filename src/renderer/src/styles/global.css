@@ -684,6 +684,63 @@ select.input option {
   margin-bottom: 14px;
 }
 
+/* ---------- Оверлей ---------- */
+.ov {
+  font-family: 'Segoe UI', Inter, system-ui, sans-serif;
+  background: rgba(16, 17, 22, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 8px;
+  color: #e6e8ec;
+  user-select: none;
+  -webkit-app-region: no-drag;
+}
+.ov-head {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: #e8b923;
+  padding: 4px 8px 8px;
+}
+.ov-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 7px;
+  padding: 7px 10px;
+  margin-bottom: 5px;
+}
+.ov-name {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ov-keys {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.ov-key {
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 5px;
+  padding: 2px 7px;
+  min-width: 20px;
+  text-align: center;
+}
+.ov-empty {
+  font-size: 12px;
+  color: #9aa0a8;
+  padding: 8px 10px;
+}
+
 /* Скроллбар */
 ::-webkit-scrollbar {
   width: 10px;

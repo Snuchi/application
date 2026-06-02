@@ -36,7 +36,8 @@ export const IPC = {
   EvtEngineState: 'evt:engine-state',
   EvtHotkeyCaptured: 'evt:hotkey-captured',
   EvtPlaybackLog: 'evt:playback-log',
-  EvtUpdate: 'evt:update'
+  EvtUpdate: 'evt:update',
+  EvtOverlayData: 'evt:overlay-data'
 } as const
 
 export type IpcChannel = (typeof IPC)[keyof typeof IPC]

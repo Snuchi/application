@@ -3,6 +3,7 @@ import { join } from 'path'
 import { applyAutoLaunch, registerIpc } from './ipc'
 import { engine } from './engine'
 import { hotkeys } from './hotkeys'
+import { overlay } from './overlay'
 import { db } from './store'
 import { initUpdater } from './updater'
 
@@ -102,6 +103,7 @@ if (!gotLock) {
 app.on('before-quit', () => {
   isQuitting = true
   hotkeys.stop()
+  overlay.destroy()
 })
 
 app.on('window-all-closed', () => {

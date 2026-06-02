@@ -1,14 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { nanoid } from 'nanoid'
-import type { Otygrovka, RPMessage } from '@shared/types'
+import type { Otygrovka } from '@shared/types'
 import { useStore } from '../store'
 import { useT } from '../i18n'
 import { Breadcrumbs } from '../components/Chrome'
-import { Plus, Trash } from '../components/Icons'
-
-function newLine(): RPMessage {
-  return { id: nanoid(), text: '', delayMs: 0 }
-}
 
 export function OtygrovkaEditorPage(): JSX.Element {
   const { nav, profiles, go, updateOtygrovka, deleteOtygrovka, setSaveBox } = useStore()
@@ -61,8 +56,9 @@ export function OtygrovkaEditorPage(): JSX.Element {
   }
 
   const patch = (p: Partial<Otygrovka>): void => setDraft({ ...draft, ...p })
-  const patchMsg = (id: string, text: string): void =>
-    patch({ messages: draft.messages.map((m) => (m.id === id ? { ...m, text } : m)) })
+  // Один бинд = один текст: храним ровно одно сообщение.
+  const setText = (text: string): void =>
+    patch({ messages: [{ id: draft.messages[0]?.id ?? nanoid(), text, delayMs: 0 }] })
 
   const startCapture = async (): Promise<void> => {
     setCapturing(true)
@@ -101,33 +97,17 @@ export function OtygrovkaEditorPage(): JSX.Element {
           </div>
         </div>
 
-        {draft.messages.map((m, i) => (
-          <div className="msg-card" key={m.id}>
-            <div className="head">
-              <span className="field-label" style={{ margin: 0 }}>
-                {t('otygrovka.scriptText')} {draft.messages.length > 1 ? i + 1 : ''}
-              </span>
-              {draft.messages.length > 1 && (
-                <button
-                  className="del"
-                  style={{ marginLeft: 'auto' }}
-                  onClick={() => patch({ messages: draft.messages.filter((x) => x.id !== m.id) })}
-                >
-                  <Trash size={15} />
-                </button>
-              )}
-            </div>
-            <textarea className="input" value={m.text} onChange={(e) => patchMsg(m.id, e.target.value)} />
-          </div>
-        ))}
+        <div className="field">
+          <div className="field-label">{t('otygrovka.scriptText')}</div>
+          <textarea
+            className="input"
+            style={{ minHeight: 90 }}
+            value={draft.messages[0]?.text ?? ''}
+            onChange={(e) => setText(e.target.value)}
+          />
+        </div>
 
-        <button className="btn block" onClick={() => patch({ messages: [...draft.messages, newLine()] })}>
-          <span className="row" style={{ justifyContent: 'center', gap: 8 }}>
-            <Plus size={15} /> {t('otygrovka.addLine')}
-          </span>
-        </button>
-
-        <div className="muted" style={{ fontSize: 13, margin: '14px 0' }}>
+        <div className="muted" style={{ fontSize: 13, margin: '4px 0 14px' }}>
           {t('otygrovka.hint')}
         </div>
 
