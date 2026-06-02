@@ -28,6 +28,13 @@ function createWindow(): void {
 
   mainWindow.on('ready-to-show', () => mainWindow?.show())
 
+  // Закрытие главного окна полностью завершает приложение (вместе с оверлеем),
+  // чтобы не оставался фоновый процесс с уничтожённым окном.
+  mainWindow.on('closed', () => {
+    mainWindow = null
+    app.quit()
+  })
+
   // Внешние ссылки открываем в браузере — только http/https (без опасных схем).
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     if (/^https?:\/\//i.test(url)) shell.openExternal(url)
@@ -52,10 +59,12 @@ if (!gotLock) {
   app.quit()
 } else {
   app.on('second-instance', () => {
-    if (mainWindow) {
+    if (mainWindow && !mainWindow.isDestroyed()) {
       if (mainWindow.isMinimized()) mainWindow.restore()
       mainWindow.show()
       mainWindow.focus()
+    } else {
+      createWindow()
     }
   })
 
