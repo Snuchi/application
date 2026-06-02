@@ -83,6 +83,15 @@ function applyVisibility(): void {
   else win.hide()
 }
 
+let lastToggle = 0
+
+function canToggle(): boolean {
+  const now = Date.now()
+  if (now - lastToggle < 300) return false // анти-дребезг (автоповтор клавиши)
+  lastToggle = now
+  return true
+}
+
 export const overlay = {
   /** Запустить оверлей для профиля. */
   start(profile: Profile): void {
@@ -103,11 +112,13 @@ export const overlay = {
   },
   /** F4 — включить/выключить оверлей. */
   toggleEnabled(): void {
+    if (!canToggle()) return
     enabled = !enabled
     applyVisibility()
   },
   /** F6 — скрыть/показать оверлей. */
   toggleVisible(): void {
+    if (!canToggle()) return
     visible = !visible
     applyVisibility()
   },

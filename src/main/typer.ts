@@ -12,22 +12,25 @@ import { clipboard } from 'electron'
 
 type NutModule = typeof import('@nut-tree-fork/nut-js')
 
-let nut: NutModule | null = null
-let nutReady = false
+// Кэшируем сам ПРОМИС загрузки — иначе при одновременных вызовах второй
+// получал ещё не загруженный модуль (null) и уходил в dry-run.
+let nutPromise: Promise<NutModule | null> | null = null
+let warmed = false
 
-async function loadNut(): Promise<NutModule | null> {
-  if (nutReady) return nut
-  nutReady = true
-  try {
-    nut = (await import('@nut-tree-fork/nut-js')) as NutModule
-    // Минимальная задержка между действиями — для максимальной скорости.
-    nut.keyboard.config.autoDelayMs = 0
-    return nut
-  } catch (err) {
-    console.warn('[typer] нативный модуль ввода недоступен, режим dry-run:', (err as Error).message)
-    nut = null
-    return null
+function loadNut(): Promise<NutModule | null> {
+  if (!nutPromise) {
+    nutPromise = (async () => {
+      try {
+        const mod = (await import('@nut-tree-fork/nut-js')) as NutModule
+        mod.keyboard.config.autoDelayMs = 0
+        return mod
+      } catch (err) {
+        console.warn('[typer] нативный модуль ввода недоступен:', (err as Error).message)
+        return null
+      }
+    })()
   }
+  return nutPromise
 }
 
 export type LogFn = (line: string) => void
@@ -39,9 +42,13 @@ export async function inputReady(): Promise<boolean> {
 
 /** Прогрев нативного провайдера ввода, чтобы первое срабатывание не тормозило. */
 export async function warmup(): Promise<void> {
+  if (warmed) return
   const mod = await loadNut()
   if (!mod) return
+  warmed = true
   try {
+    // Реальное действие, чтобы инициализировать нативный провайдер заранее.
+    await mod.keyboard.pressKey(mod.Key.LeftControl)
     await mod.keyboard.releaseKey(mod.Key.LeftControl)
   } catch {
     /* ничего */
