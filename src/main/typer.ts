@@ -61,18 +61,27 @@ function delay(ms: number): Promise<void> {
  */
 async function neutralizeModifiers(mod: NutModule): Promise<void> {
   const K = mod.Key
+  // Каждый шаг изолирован — чтобы сбой одного не оставил Ctrl зажатым.
   try {
     // 1. Пометить Alt как «использованный» (нажатие Ctrl при зажатом Alt).
     await mod.keyboard.pressKey(K.LeftControl)
     await delay(10)
+  } catch {
+    /* ок */
+  }
+  try {
     // 2. Отпустить Alt/Shift/Win, удерживая Ctrl-маску.
     await mod.keyboard.releaseKey(K.LeftAlt, K.RightAlt, K.LeftShift, K.RightShift, K.LeftSuper, K.RightSuper)
     await delay(10)
+  } catch {
+    /* ок */
+  }
+  try {
     // 3. Отпустить саму Ctrl-маску.
     await mod.keyboard.releaseKey(K.LeftControl, K.RightControl)
     await delay(10)
   } catch {
-    /* клавиши не были зажаты — ок */
+    /* ок */
   }
 }
 

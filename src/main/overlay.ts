@@ -111,6 +111,10 @@ export const overlay = {
     visible = !visible
     applyVisibility()
   },
+  /** Показан ли оверлей сейчас. */
+  isShown(): boolean {
+    return running && enabled && visible
+  },
   destroy(): void {
     if (win && !win.isDestroyed()) win.destroy()
     win = null

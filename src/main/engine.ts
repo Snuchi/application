@@ -101,18 +101,27 @@ class Engine {
 
     // Клавиши управления оверлеем из настроек (F4 — вкл/выкл, F6 — скрыть/показать).
     const settings = db.getSettings()
-    this.safeRegister(settings.overlayToggleKey, () => overlay.toggleEnabled())
-    this.safeRegister(settings.overlayHideKey, () => overlay.toggleVisible())
+    const f4 = this.safeRegister(settings.overlayToggleKey, () => {
+      overlay.toggleEnabled()
+      this.log(`• Оверлей: ${overlay.isShown() ? 'показан' : 'скрыт'}`)
+    })
+    const f6 = this.safeRegister(settings.overlayHideKey, () => {
+      overlay.toggleVisible()
+      this.log(`• Оверлей: ${overlay.isShown() ? 'показан' : 'скрыт'}`)
+    })
+    this.log(
+      `• Управление оверлеем: ${settings.overlayToggleKey} ${f4 ? '✓' : '✗'}, ${settings.overlayHideKey} ${f6 ? '✓' : '✗'}`
+    )
 
     return { ok, total: withKeys.length }
   }
 
-  private safeRegister(combo: string, handler: () => void): void {
-    if (!combo) return
+  private safeRegister(combo: string, handler: () => void): boolean {
+    if (!combo) return false
     try {
-      globalShortcut.register(this.toAccelerator(combo), handler)
+      return globalShortcut.register(this.toAccelerator(combo), handler)
     } catch {
-      /* неверная комбинация — пропускаем */
+      return false
     }
   }
 
