@@ -35,6 +35,10 @@ export const IPC = {
   // Буфер обмена
   ClipboardWrite: 'clipboard:write',
 
+  // Шаринг профиля (короткая ссылка через paste-сервис)
+  ShareUpload: 'share:upload',
+  ShareResolve: 'share:resolve',
+
   // События main -> renderer
   EvtEngineState: 'evt:engine-state',
   EvtHotkeyCaptured: 'evt:hotkey-captured',

@@ -20,7 +20,7 @@ win:
   target:
     - nsis
     - zip
-  artifactName: AVN-Binder-${version}.${ext}
+  artifactName: AVN-Binder.${ext}
 nsis:
   oneClick: false
   allowToChangeInstallationDirectory: true

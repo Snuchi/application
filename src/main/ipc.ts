@@ -5,6 +5,7 @@ import { db, newOtygrovka } from './store'
 import { engine } from './engine'
 import { hotkeys } from './hotkeys'
 import { checkForUpdates, getUpdateStatus, installUpdate } from './updater'
+import { resolveShare, uploadShare } from './share'
 
 /** Применяет настройку автозапуска приложения вместе с системой. */
 export function applyAutoLaunch(enabled: boolean): void {
@@ -69,6 +70,10 @@ export function registerIpc(): void {
 
   // ---- Буфер обмена ----
   ipcMain.handle(IPC.ClipboardWrite, (_e, text: string) => clipboard.writeText(text))
+
+  // ---- Шаринг профиля ----
+  ipcMain.handle(IPC.ShareUpload, (_e, code: string) => uploadShare(code))
+  ipcMain.handle(IPC.ShareResolve, (_e, input: string) => resolveShare(input))
 
   // ---- Обновления / версия ----
   ipcMain.handle(IPC.AppVersion, () => app.getVersion())

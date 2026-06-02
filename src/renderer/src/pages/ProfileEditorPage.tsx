@@ -23,6 +23,7 @@ export function ProfileEditorPage(): JSX.Element {
   const profile = profiles.find((p) => p.id === nav.profileId)
   const [name, setName] = useState(profile?.name ?? '')
   const [copied, setCopied] = useState(false)
+  const [sharing, setSharing] = useState(false)
 
   useEffect(() => {
     setName(profile?.name ?? '')
@@ -41,10 +42,14 @@ export function ProfileEditorPage(): JSX.Element {
 
   const isRunning = engine.activeProfileId === profile.id
   const shareCode = encodeProfile(profile)
-  const copyShare = (): void => {
-    void window.api.clipboardWrite(shareCode)
+  const copyShare = async (): Promise<void> => {
+    setSharing(true)
+    // Пытаемся получить короткую ссылку; если сервис недоступен — копируем код.
+    const link = await window.api.shareUpload(shareCode)
+    await window.api.clipboardWrite(link ?? shareCode)
+    setSharing(false)
     setCopied(true)
-    setTimeout(() => setCopied(false), 1500)
+    setTimeout(() => setCopied(false), 1800)
   }
 
   return (
@@ -105,24 +110,26 @@ export function ProfileEditorPage(): JSX.Element {
 
         <div className="divider" />
 
-        {/* Ссылка для импорта (поделиться профилем) */}
+        {/* Поделиться профилем — короткая ссылка */}
         <div className="field">
           <div className="field-label">{t('profile.share')}</div>
-          <div className="copy-field">
-            <span className="link">
+          <div className="share-box">
+            <div className="share-info">
               {t('profile.shareValue', { name: profile.name, n: profile.otygrovki.length })}
-            </span>
+            </div>
             <button
-              className={`btn sm ${copied ? 'green' : ''}`}
-              style={{ borderRadius: 0, minWidth: 124 }}
+              className={`btn ${copied ? 'green' : 'ghost'}`}
+              style={{ minWidth: 150 }}
+              disabled={sharing}
               onClick={copyShare}
             >
-              <span className="row" style={{ gap: 6 }}>
-                <Copy size={14} /> {copied ? t('profile.copied') : t('profile.copy')}
+              <span className="row" style={{ gap: 7, justifyContent: 'center' }}>
+                <Copy size={15} />
+                {sharing ? t('profile.sharing') : copied ? t('profile.copied') : t('profile.copyLink')}
               </span>
             </button>
           </div>
-          <div className="muted" style={{ fontSize: 12, marginTop: 6 }}>
+          <div className="muted" style={{ fontSize: 12, marginTop: 8 }}>
             {t('profile.shareHint')}
           </div>
         </div>

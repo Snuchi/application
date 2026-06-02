@@ -38,6 +38,10 @@ const api = {
   // Буфер обмена
   clipboardWrite: (text: string): Promise<void> => ipcRenderer.invoke(IPC.ClipboardWrite, text),
 
+  // Шаринг профиля
+  shareUpload: (code: string): Promise<string | null> => ipcRenderer.invoke(IPC.ShareUpload, code),
+  shareResolve: (input: string): Promise<string> => ipcRenderer.invoke(IPC.ShareResolve, input),
+
   // Обновления / версия
   appVersion: (): Promise<string> => ipcRenderer.invoke(IPC.AppVersion),
   updateCheck: (): Promise<UpdateStatus> => ipcRenderer.invoke(IPC.UpdateCheck),

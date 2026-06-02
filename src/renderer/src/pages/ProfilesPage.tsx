@@ -13,15 +13,22 @@ export function ProfilesPage(): JSX.Element {
   const [code, setCode] = useState('')
   const [error, setError] = useState('')
 
-  const doImport = (): void => {
+  const [resolving, setResolving] = useState(false)
+
+  const doImport = async (): Promise<void> => {
+    setResolving(true)
     try {
-      const data = decodeProfile(code)
+      // Принимаем и короткую ссылку, и сырой код.
+      const raw = await window.api.shareResolve(code)
+      const data = decodeProfile(raw)
       importProfile(data)
       setImporting(false)
       setCode('')
       setError('')
     } catch {
       setError(t('profiles.importError'))
+    } finally {
+      setResolving(false)
     }
   }
 
@@ -77,8 +84,8 @@ export function ProfilesPage(): JSX.Element {
           </div>
           <textarea
             className="input"
-            style={{ minHeight: 90, fontFamily: 'monospace', fontSize: 12 }}
-            placeholder="AVNB1:..."
+            style={{ minHeight: 80, fontFamily: 'monospace', fontSize: 12 }}
+            placeholder="https://paste.rs/...  или  AVNB1:..."
             value={code}
             onChange={(e) => {
               setCode(e.target.value)
@@ -93,8 +100,13 @@ export function ProfilesPage(): JSX.Element {
             <button className="btn ghost" style={{ flex: 1 }} onClick={() => setImporting(false)}>
               {t('common.cancel')}
             </button>
-            <button className="btn green" style={{ flex: 1 }} disabled={!code.trim()} onClick={doImport}>
-              {t('profiles.importDo')}
+            <button
+              className="btn green"
+              style={{ flex: 1 }}
+              disabled={!code.trim() || resolving}
+              onClick={doImport}
+            >
+              {resolving ? t('profiles.importDo') + '…' : t('profiles.importDo')}
             </button>
           </div>
         </Modal>

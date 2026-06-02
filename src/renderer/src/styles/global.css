@@ -480,6 +480,24 @@ select.input option {
 .muted {
   color: var(--text-dim);
 }
+.share-box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.share-info {
+  flex: 1;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  font-size: 13px;
+  color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .copy-field {
   display: flex;
   align-items: center;
