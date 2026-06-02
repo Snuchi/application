@@ -35,6 +35,9 @@ const api = {
   windowMaximize: (): Promise<void> => ipcRenderer.invoke(IPC.WindowMaximize),
   windowClose: (): Promise<void> => ipcRenderer.invoke(IPC.WindowClose),
 
+  // Буфер обмена
+  clipboardWrite: (text: string): Promise<void> => ipcRenderer.invoke(IPC.ClipboardWrite, text),
+
   // Обновления / версия
   appVersion: (): Promise<string> => ipcRenderer.invoke(IPC.AppVersion),
   updateCheck: (): Promise<UpdateStatus> => ipcRenderer.invoke(IPC.UpdateCheck),

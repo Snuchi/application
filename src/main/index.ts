@@ -28,10 +28,15 @@ function createWindow(): void {
 
   mainWindow.on('ready-to-show', () => mainWindow?.show())
 
-  // Внешние ссылки открываем в браузере, а не в окне приложения.
+  // Внешние ссылки открываем в браузере — только http/https (без опасных схем).
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    shell.openExternal(url)
+    if (/^https?:\/\//i.test(url)) shell.openExternal(url)
     return { action: 'deny' }
+  })
+
+  // Запрещаем навигацию окна на внешние адреса.
+  mainWindow.webContents.on('will-navigate', (e, url) => {
+    if (!url.startsWith('file://') && url !== process.env['ELECTRON_RENDERER_URL']) e.preventDefault()
   })
 
   if (process.env['ELECTRON_RENDERER_URL']) {

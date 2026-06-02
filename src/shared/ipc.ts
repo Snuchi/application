@@ -32,6 +32,9 @@ export const IPC = {
   UpdateCheck: 'update:check',
   UpdateInstall: 'update:install',
 
+  // Буфер обмена
+  ClipboardWrite: 'clipboard:write',
+
   // События main -> renderer
   EvtEngineState: 'evt:engine-state',
   EvtHotkeyCaptured: 'evt:hotkey-captured',

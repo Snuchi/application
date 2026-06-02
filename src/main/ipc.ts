@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain } from 'electron'
+import { app, BrowserWindow, clipboard, ipcMain } from 'electron'
 import { IPC } from '../shared/ipc'
 import { AppSettings, Profile } from '../shared/types'
 import { db, newOtygrovka } from './store'
@@ -66,6 +66,9 @@ export function registerIpc(): void {
 
   // Вспомогательный фабричный метод для UI: создать пустую отыгровку.
   ipcMain.handle('otygrovka:new', () => newOtygrovka())
+
+  // ---- Буфер обмена ----
+  ipcMain.handle(IPC.ClipboardWrite, (_e, text: string) => clipboard.writeText(text))
 
   // ---- Обновления / версия ----
   ipcMain.handle(IPC.AppVersion, () => app.getVersion())

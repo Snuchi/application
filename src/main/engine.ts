@@ -71,9 +71,7 @@ class Engine {
     this.log(`▶ Профиль «${profile.name}» запущен`)
     this.log(`• Привязано хоткеев: ${ok}/${total}`)
     void inputBackend().then((b) => {
-      const label =
-        b === 'native' ? 'нативный SendInput (готов)' : b === 'nut' ? 'nut-js (запасной)' : 'НЕ загружен'
-      this.log(`• Движок ввода: ${label}`)
+      this.log(`• Движок ввода: ${b === 'native' ? 'нативный SendInput (готов)' : 'НЕ загружен'}`)
       this.log(`• native: ${nativeDiag}`)
     })
     return this.state

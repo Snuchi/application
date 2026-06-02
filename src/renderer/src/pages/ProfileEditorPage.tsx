@@ -22,6 +22,7 @@ export function ProfileEditorPage(): JSX.Element {
 
   const profile = profiles.find((p) => p.id === nav.profileId)
   const [name, setName] = useState(profile?.name ?? '')
+  const [copied, setCopied] = useState(false)
 
   useEffect(() => {
     setName(profile?.name ?? '')
@@ -40,7 +41,11 @@ export function ProfileEditorPage(): JSX.Element {
 
   const isRunning = engine.activeProfileId === profile.id
   const shareCode = encodeProfile(profile)
-  const copyShare = (): void => void navigator.clipboard.writeText(shareCode)
+  const copyShare = (): void => {
+    void window.api.clipboardWrite(shareCode)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 1500)
+  }
 
   return (
     <>
@@ -104,10 +109,16 @@ export function ProfileEditorPage(): JSX.Element {
         <div className="field">
           <div className="field-label">{t('profile.share')}</div>
           <div className="copy-field">
-            <span className="link">{shareCode}</span>
-            <button className="btn sm" style={{ borderRadius: 0 }} onClick={copyShare}>
+            <span className="link">
+              {t('profile.shareValue', { name: profile.name, n: profile.otygrovki.length })}
+            </span>
+            <button
+              className={`btn sm ${copied ? 'green' : ''}`}
+              style={{ borderRadius: 0, minWidth: 124 }}
+              onClick={copyShare}
+            >
               <span className="row" style={{ gap: 6 }}>
-                <Copy size={14} /> {t('profile.copy')}
+                <Copy size={14} /> {copied ? t('profile.copied') : t('profile.copy')}
               </span>
             </button>
           </div>
