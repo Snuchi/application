@@ -71,6 +71,22 @@ export function isAdmin(): boolean {
 
 let warmed = false
 
+/**
+ * «Маска меню»: быстрый тап Ctrl. Вызывать СРАЗУ при срабатывании Alt-бинда,
+ * пока Alt ещё физически зажат — тогда приложение считает Alt «использованным
+ * в комбинации» и не активирует верхнее меню при отпускании Alt.
+ */
+export function maskMenu(): void {
+  if (nativeAvailable && nativeInput) {
+    try {
+      nativeInput.keyDown(VK.CTRL)
+      nativeInput.keyUp(VK.CTRL)
+    } catch {
+      /* ничего */
+    }
+  }
+}
+
 /** Прогрев буфера обмена и нативного ввода, чтобы первый бинд не тормозил. */
 export async function warmup(): Promise<void> {
   if (warmed) return
@@ -98,8 +114,6 @@ export interface PlayOptions {
   messages: { text: string; delayMs: number }[]
   /** Если true — не нажимать Enter автоматически (пользователь жмёт сам). */
   manual?: boolean
-  /** Снять фокус со строки меню приложения (для Alt-комбинаций в Word/Блокноте). */
-  releaseMenuFocus?: boolean
   log?: LogFn
   shouldAbort?: () => boolean
 }
@@ -134,13 +148,6 @@ export async function playOtygrovka(opts: PlayOptions): Promise<void> {
 
   // Сбросить возможный зажатый Ctrl.
   a.keyUp(VK.CTRL)
-
-  // Для Alt-биндов вернуть фокус из строки меню в документ (Word/Блокнот).
-  if (opts.releaseMenuFocus) {
-    a.keyDown(VK.ALT)
-    a.keyUp(VK.ALT)
-    await delay(25)
-  }
 
   for (let i = 0; i < opts.messages.length; i++) {
     if (opts.shouldAbort?.()) {

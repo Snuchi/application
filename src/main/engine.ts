@@ -2,7 +2,7 @@ import { BrowserWindow, globalShortcut } from 'electron'
 import { EngineState, Otygrovka, Profile } from '../shared/types'
 import { IPC } from '../shared/ipc'
 import { hotkeys } from './hotkeys'
-import { inputBackend, nativeDiag, playOtygrovka, warmup } from './typer'
+import { inputBackend, maskMenu, nativeDiag, playOtygrovka, warmup } from './typer'
 import { overlay } from './overlay'
 import { db } from './store'
 
@@ -131,13 +131,18 @@ class Engine {
     }
     this.playing = true
     this.abort = false
+
+    // СРАЗУ гасим меню Alt (пока Alt ещё зажат) — тап Ctrl помечает Alt
+    // «использованным», и при отпускании Alt меню приложения не активируется.
+    if (/alt/i.test(otygrovka.hotkey)) maskMenu()
+
     this.state = { ...this.state, playingOtygrovkaId: otygrovka.id }
     this.emitState()
     overlay.flash(otygrovka.id)
     this.log(`⏵ Бинд «${otygrovka.name}»`)
 
     // Ждём, пока пользователь отпустит горячую комбинацию: иначе зажатый Alt
-    // ломает Ctrl+V (становится Ctrl+Alt+V) и открывает меню приложения.
+    // ломает Ctrl+V (становится Ctrl+Alt+V).
     if (hotkeys.modifiersDown()) {
       await hotkeys.waitForModifiersUp(700)
     }
@@ -147,8 +152,6 @@ class Engine {
         messages: otygrovka.messages,
         // Всегда ручной режим: вставляем текст, Enter пользователь жмёт сам.
         manual: true,
-        // Для Alt-комбинаций снимаем фокус с меню приложения.
-        releaseMenuFocus: /alt/i.test(otygrovka.hotkey),
         log: (l) => this.log(l),
         shouldAbort: () => this.abort
       })
