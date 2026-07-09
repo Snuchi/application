@@ -16,7 +16,9 @@ permissions:
 
 jobs:
   build:
-    runs-on: windows-latest
+    # Закреплено на windows-2022 (Visual Studio 2022): на windows-latest появился
+    # VS 18 (2026), который старый node-gyp не распознаёт при сборке нативного модуля.
+    runs-on: windows-2022
 
     steps:
       - name: Checkout
