@@ -6,9 +6,11 @@ Electron + React + TypeScript (electron-vite). Сборка и публикац�
 ## Релизы
 
 - **Правило: при каждом новом релизе всё старое удаляется** — остаётся только текущая
-  версия и её тег. Старые релизы и теги удаляет сам workflow **Build Windows**
-  (job `cleanup-old-releases`) после успешной публикации. Ручная чистка — workflow
-  **Cleanup old releases** (Actions → Cleanup old releases → Run workflow).
+  версия и её тег, а в Actions — только самый свежий прогон каждого workflow.
+  Чистку делает сам workflow **Build Windows** (job `cleanup-old-releases`) после
+  успешной публикации. Ручная чистка — workflow **Cleanup old releases**
+  (Actions → Cleanup old releases → Run workflow). Логика чистки общая для обоих —
+  `.github/scripts/cleanup.sh`.
 - Не удалять релиз текущей версии — по нему работают автообновления установленных
   приложений (electron-updater читает `latest.yml`) и постоянная ссылка
   `releases/latest/download/AVN-Binder.exe`.

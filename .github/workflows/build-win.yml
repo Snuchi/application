@@ -48,23 +48,21 @@ jobs:
             dist/*.zip
           if-no-files-found: error
 
-  # Правило проекта: после успешной публикации оставляем только текущую версию,
-  # все старые релизы и их теги удаляем. Запускается только если сборка прошла.
+  # Правило проекта: после успешной публикации оставляем только текущую версию
+  # (старые релизы и теги удаляем) и только последний прогон у каждого workflow.
+  # Запускается только если сборка прошла.
   cleanup-old-releases:
     needs: [build]
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # удаление релизов и тегов
+      actions: write # удаление старых прогонов Actions
     steps:
       - uses: actions/checkout@v4
 
-      - name: Delete old releases and tags
-        run: |
-          VERSION=$(node -p "require('./package.json').version")
-          gh release list --repo "$REPO" --limit 100 --json tagName -q '.[].tagName' | while read -r TAG; do
-            [ -z "$TAG" ] && continue
-            [ "$TAG" = "v$VERSION" ] && continue
-            echo "Deleting $TAG"
-            gh release delete "$TAG" --repo "$REPO" --yes --cleanup-tag || true
-          done
+      - name: Delete old releases, tags and workflow runs
+        run: bash .github/scripts/cleanup.sh
         env:
           REPO: ${{ github.repository }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CURRENT_RUN: ${{ github.run_id }}
