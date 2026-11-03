@@ -1,0 +1,28 @@
+# Ручная чистка: удаляет все релизы и теги, кроме текущей версии из package.json.
+# Запуск: Actions → Cleanup old releases → Run workflow.
+name: Cleanup old releases
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Delete old releases and tags
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          gh release list --repo "$REPO" --limit 100 --json tagName -q '.[].tagName' | while read -r TAG; do
+            [ -z "$TAG" ] && continue
+            [ "$TAG" = "v$VERSION" ] && continue
+            echo "Deleting $TAG"
+            gh release delete "$TAG" --repo "$REPO" --yes --cleanup-tag || true
+          done
+        env:
+          REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
