@@ -35,6 +35,9 @@ export const IPC = {
   // Буфер обмена
   ClipboardWrite: 'clipboard:write',
 
+  // Оверлей: принимать мышь, пока курсор над ним (прокрутка колёсиком)
+  OverlaySetInteractive: 'overlay:set-interactive',
+
   // Шаринг профиля (короткая ссылка через paste-сервис)
   ShareUpload: 'share:upload',
   ShareResolve: 'share:resolve',

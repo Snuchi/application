@@ -6,6 +6,7 @@ import { engine } from './engine'
 import { hotkeys } from './hotkeys'
 import { checkForUpdates, getUpdateStatus, installUpdate } from './updater'
 import { resolveShare, uploadShare } from './share'
+import { overlay } from './overlay'
 
 /** Применяет настройку автозапуска приложения вместе с системой. */
 export function applyAutoLaunch(enabled: boolean): void {
@@ -74,6 +75,11 @@ export function registerIpc(): void {
   // ---- Шаринг профиля ----
   ipcMain.handle(IPC.ShareUpload, (_e, code: string) => uploadShare(code))
   ipcMain.handle(IPC.ShareResolve, (_e, input: string) => resolveShare(input))
+
+  // ---- Оверлей ----
+  ipcMain.handle(IPC.OverlaySetInteractive, (_e, interactive: boolean) =>
+    overlay.setInteractive(interactive)
+  )
 
   // ---- Обновления / версия ----
   ipcMain.handle(IPC.AppVersion, () => app.getVersion())

@@ -29,9 +29,11 @@ function buildData(profile: Profile): OverlayData {
   }
 }
 
+/** Высота по числу биндов, но не выше рабочей области экрана (дальше — прокрутка). */
 function contentHeight(): number {
   const rows = Math.max(lastData.binds.length, 1)
-  return Math.min(40 + rows * 38 + 14, 900)
+  const maxHeight = screen.getPrimaryDisplay().workArea.height - 32
+  return Math.min(40 + rows * 38 + 14, maxHeight)
 }
 
 function createWindow(): BrowserWindow {
@@ -60,7 +62,9 @@ function createWindow(): BrowserWindow {
     }
   })
   win.setAlwaysOnTop(true, 'screen-saver')
-  win.setIgnoreMouseEvents(true)
+  // Клики проходят насквозь, но движение мыши пересылается в оверлей —
+  // так он узнаёт о наведении и включает прокрутку колёсиком (см. setInteractive).
+  win.setIgnoreMouseEvents(true, { forward: true })
 
   if (process.env['ELECTRON_RENDERER_URL']) {
     win.loadURL(`${process.env['ELECTRON_RENDERER_URL']}#overlay`)
@@ -79,8 +83,13 @@ function push(): void {
 
 function applyVisibility(): void {
   if (!win || win.isDestroyed()) return
-  if (running && visible) win.showInactive()
-  else win.hide()
+  if (running && visible) {
+    win.showInactive()
+  } else {
+    // Скрывая оверлей, возвращаем сквозные клики — mouseleave может не прийти.
+    win.setIgnoreMouseEvents(true, { forward: true })
+    win.hide()
+  }
 }
 
 export const overlay = {
@@ -116,6 +125,15 @@ export const overlay = {
   },
   isShown(): boolean {
     return running && visible
+  },
+  /**
+   * Курсор над оверлеем — принимаем мышь (колёсико прокручивает список);
+   * курсор ушёл — снова пропускаем клики насквозь. Окно не фокусируемое,
+   * поэтому фокус остаётся в приложении пользователя.
+   */
+  setInteractive(interactive: boolean): void {
+    if (!win || win.isDestroyed()) return
+    win.setIgnoreMouseEvents(!interactive, { forward: true })
   },
   destroy(): void {
     if (win && !win.isDestroyed()) win.destroy()

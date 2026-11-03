@@ -38,6 +38,10 @@ const api = {
   // Буфер обмена
   clipboardWrite: (text: string): Promise<void> => ipcRenderer.invoke(IPC.ClipboardWrite, text),
 
+  // Оверлей: принимать мышь, пока курсор над ним
+  overlaySetInteractive: (interactive: boolean): Promise<void> =>
+    ipcRenderer.invoke(IPC.OverlaySetInteractive, interactive),
+
   // Шаринг профиля
   shareUpload: (code: string): Promise<string | null> => ipcRenderer.invoke(IPC.ShareUpload, code),
   shareResolve: (input: string): Promise<string> => ipcRenderer.invoke(IPC.ShareResolve, input),
