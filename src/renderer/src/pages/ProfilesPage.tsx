@@ -85,7 +85,7 @@ export function ProfilesPage(): JSX.Element {
           <textarea
             className="input"
             style={{ minHeight: 80, fontFamily: 'monospace', fontSize: 12 }}
-            placeholder="https://paste.rs/...  или  AVNB1:..."
+            placeholder="https://api.pastes.dev/...  или  AVNB1:..."
             value={code}
             onChange={(e) => {
               setCode(e.target.value)
